@@ -1,3 +1,4 @@
+
 // Define types
 export type UserRole = 'admin' | 'project_manager' | 'team_member' | 'client';
 
@@ -36,11 +37,14 @@ export interface Task {
   dueDate?: string;
 }
 
+// Changed the icon type from string to a specific set of Lucide icon names
+export type IconName = 'search' | 'mouse-pointer-click' | 'file-text' | 'share-2' | 'bar-chart';
+
 export interface Service {
   id: string;
   name: string;
   description: string;
-  icon: string;
+  icon: IconName; // Using the specific icon type
   features: string[];
   price?: number;
 }
