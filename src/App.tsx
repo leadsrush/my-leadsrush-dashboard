@@ -106,6 +106,12 @@ const App = () => (
               />
               
               {/* Common routes */}
+              <Route path="/projects" element={
+                <ProtectedRoute>
+                  <Navigate to={'/team-dashboard'} replace />
+                </ProtectedRoute>
+              } />
+              
               <Route 
                 path="/projects/:projectId" 
                 element={
@@ -114,6 +120,7 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
+              
               <Route 
                 path="/messages" 
                 element={
@@ -122,6 +129,7 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
+              
               <Route 
                 path="/services" 
                 element={
@@ -130,6 +138,25 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
+              
+              {/* Admin/Team routes */}
+              <Route path="/clients" element={
+                <ProtectedRoute allowedRoles={['admin', 'project_manager']}>
+                  <NotFound />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/team" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <NotFound />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <NotFound />
+                </ProtectedRoute>
+              } />
               
               {/* 404 route */}
               <Route path="*" element={<NotFound />} />

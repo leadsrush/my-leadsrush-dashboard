@@ -27,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     },
     {
       name: 'Projects',
-      href: '/projects',
+      href: '/team-dashboard', // Redirect to dashboard since we don't have a separate projects page
       icon: Briefcase,
       roles: ['admin', 'project_manager', 'team_member', 'client']
     },
@@ -70,6 +70,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     hasRole(item.roles as any)
   );
 
+  // Check if the current path is active, including nested routes
+  const isRouteActive = (path: string) => {
+    // For the dashboard, only match exact path
+    if (path.includes('dashboard')) {
+      return location.pathname === path;
+    }
+    
+    // For other paths, match the start of the path
+    return location.pathname.startsWith(path);
+  };
+
   return (
     <div 
       className={cn(
@@ -92,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       <ScrollArea className="h-[calc(100vh-4rem)] py-4">
         <nav className="px-2 space-y-1">
           {filteredNavItems.map((item) => {
-            const isActive = location.pathname === item.href;
+            const isActive = isRouteActive(item.href);
             
             return (
               <Link
