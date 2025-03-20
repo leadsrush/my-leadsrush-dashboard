@@ -77,13 +77,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       return location.pathname === path;
     }
     
-    // Special case for projects
-    if (path === '/projects' && location.pathname.startsWith('/projects/')) {
-      return true;
-    }
-    
-    // For other paths, match exactly or the start of the path if it's a parent route
-    return location.pathname === path;
+    // For other paths, check if the current path starts with the given path
+    return location.pathname === path || 
+           (path !== '/' && location.pathname.startsWith(path + '/'));
   };
 
   return (

@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { PageTransition } from "@/components/layout/PageTransition";
+import PageTransition from "@/components/layout/PageTransition";
 import { useAuth } from "@/context/AuthContext";
 
 const Settings = () => {
@@ -72,12 +72,12 @@ const Settings = () => {
                     
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone</Label>
-                      <Input id="phone" defaultValue={user?.phone || ""} />
+                      <Input id="phone" />
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="company">Company</Label>
-                      <Input id="company" defaultValue={user?.company || ""} />
+                      <Input id="company" />
                     </div>
                   </div>
                   

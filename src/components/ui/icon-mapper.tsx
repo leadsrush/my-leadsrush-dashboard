@@ -19,15 +19,16 @@ const iconMap: Record<IconName, LucideIcon> = {
   'bar-chart': BarChart,
 };
 
-interface IconProps extends React.SVGProps<SVGSVGElement> {
+interface IconProps {
   name: IconName;
   size?: number;
+  className?: string;
 }
 
 export const Icon: React.FC<IconProps> = ({ 
   name, 
   size = 24, 
-  ...props 
+  className 
 }) => {
   const IconComponent = iconMap[name];
   
@@ -36,7 +37,7 @@ export const Icon: React.FC<IconProps> = ({
     return null;
   }
   
-  return <IconComponent size={size} {...props} />;
+  return <IconComponent size={size} className={className} />;
 };
 
 export default Icon;
