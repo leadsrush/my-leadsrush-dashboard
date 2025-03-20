@@ -14,6 +14,9 @@ import TeamDashboard from "./pages/TeamDashboard";
 import ProjectDetails from "./pages/ProjectDetails";
 import Messages from "./pages/Messages";
 import Services from "./pages/Services";
+import Clients from "./pages/Clients";
+import Team from "./pages/Team";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 // Components
@@ -139,22 +142,22 @@ const App = () => (
                 } 
               />
               
-              {/* Admin/Team routes */}
+              {/* Admin/Team routes with actual pages now */}
               <Route path="/clients" element={
                 <ProtectedRoute allowedRoles={['admin', 'project_manager']}>
-                  <NotFound />
+                  <Clients />
                 </ProtectedRoute>
               } />
               
               <Route path="/team" element={
                 <ProtectedRoute allowedRoles={['admin']}>
-                  <NotFound />
+                  <Team />
                 </ProtectedRoute>
               } />
               
               <Route path="/settings" element={
                 <ProtectedRoute>
-                  <NotFound />
+                  <Settings />
                 </ProtectedRoute>
               } />
               

@@ -27,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     },
     {
       name: 'Projects',
-      href: '/team-dashboard', // Redirect to dashboard since we don't have a separate projects page
+      href: '/projects',
       icon: Briefcase,
       roles: ['admin', 'project_manager', 'team_member', 'client']
     },
@@ -77,8 +77,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       return location.pathname === path;
     }
     
-    // For other paths, match the start of the path
-    return location.pathname.startsWith(path);
+    // Special case for projects
+    if (path === '/projects' && location.pathname.startsWith('/projects/')) {
+      return true;
+    }
+    
+    // For other paths, match exactly or the start of the path if it's a parent route
+    return location.pathname === path;
   };
 
   return (
