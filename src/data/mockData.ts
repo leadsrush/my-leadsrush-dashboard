@@ -1,4 +1,3 @@
-
 // Define types
 export type UserRole = 'admin' | 'project_manager' | 'team_member' | 'client';
 
@@ -275,7 +274,7 @@ export const messages: Message[] = [
     senderId: 'client2',
     recipientId: 'pm1',
     projectId: 'proj2',
-    content: 'I have some ideas for the Q1 campaign that I'd like to share with the team.',
+    content: "I have some ideas for the Q1 campaign that I'd like to share with the team.",
     timestamp: '2023-12-02T11:45:00Z',
     read: false
   }
