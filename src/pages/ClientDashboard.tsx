@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import PageTransition from '@/components/layout/PageTransition';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import { useAuth } from '@/context/AuthContext';
-import { getProjectsByClient, getUnreadMessageCount, getMessagesByUser, Project } from '@/data/mockData';
+import { getProjectsByClient, getUnreadMessageCount, getMessagesByUser, Project, services } from '@/data/mockData';
 
 const ClientDashboard = () => {
   const { user } = useAuth();

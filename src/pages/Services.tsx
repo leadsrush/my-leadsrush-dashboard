@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -38,6 +37,9 @@ const Services = () => {
     navigate('/client-dashboard');
   };
 
+  // Keep a reference to all available services
+  const availableServices = [...services];
+
   return (
     <PageTransition className="container py-6 max-w-7xl">
       <div className="mb-8">
@@ -58,7 +60,7 @@ const Services = () => {
       </div>
       
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {services.map((service, index) => (
+        {availableServices.map((service, index) => (
           <motion.div
             key={service.id}
             initial={{ opacity: 0, y: 20 }}

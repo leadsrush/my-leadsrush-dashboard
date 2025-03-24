@@ -34,7 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import PageTransition from '@/components/layout/PageTransition';
 import Icon from '@/components/ui/icon-mapper';
-import { Service, services, IconName } from '@/data/mockData';
+import { Service, services as originalServices, IconName } from '@/data/mockData';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -54,7 +54,7 @@ type ServiceFormValues = z.infer<typeof serviceFormSchema>;
 const AdminServices = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [servicesList, setServicesList] = useState<Service[]>(services);
+  const [servicesList, setServicesList] = useState<Service[]>([...originalServices]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -130,10 +130,15 @@ const AdminServices = () => {
 
   const handleDelete = () => {
     if (serviceToDelete) {
+      // Remove from original services array
+      const serviceIndex = originalServices.findIndex(s => s.id === serviceToDelete.id);
+      if (serviceIndex !== -1) {
+        originalServices.splice(serviceIndex, 1);
+      }
+      
+      // Update local state
       const updatedServices = servicesList.filter(service => service.id !== serviceToDelete.id);
       setServicesList(updatedServices);
-      // In a real app, this would persist to a database
-      // For now we're just updating our local state
       
       toast({
         title: "Service deleted",
@@ -146,15 +151,30 @@ const AdminServices = () => {
   };
 
   const onSubmit = (values: ServiceFormValues) => {
-    // In a real app, we would send this to an API
-    // For now, we'll update our local state
+    const formattedService: Service = {
+      id: values.id,
+      name: values.name,
+      description: values.description,
+      icon: values.icon,
+      features: values.features,
+      price: values.price
+    };
     
     if (editingService) {
       // Update existing service
       const updatedServices = servicesList.map(service => 
-        service.id === values.id ? values : service
+        service.id === values.id ? formattedService : service
       );
       setServicesList(updatedServices);
+      
+      // Update in the original services array
+      const serviceIndex = originalServices.findIndex(s => s.id === values.id);
+      if (serviceIndex !== -1) {
+        originalServices[serviceIndex] = formattedService;
+      } else {
+        // If not found (shouldn't happen), add it
+        originalServices.push(formattedService);
+      }
       
       toast({
         title: "Service updated",
@@ -162,7 +182,10 @@ const AdminServices = () => {
       });
     } else {
       // Add new service
-      setServicesList([...servicesList, values]);
+      setServicesList([...servicesList, formattedService]);
+      
+      // Add to the original services array
+      originalServices.push(formattedService);
       
       toast({
         title: "Service created",
