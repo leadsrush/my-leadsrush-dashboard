@@ -14,6 +14,7 @@ import TeamDashboard from "./pages/TeamDashboard";
 import ProjectDetails from "./pages/ProjectDetails";
 import Messages from "./pages/Messages";
 import Services from "./pages/Services";
+import AdminServices from "./pages/AdminServices";
 import Clients from "./pages/Clients";
 import Team from "./pages/Team";
 import Settings from "./pages/Settings";
@@ -138,6 +139,16 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['client']}>
                     <Services />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Admin service management route */}
+              <Route 
+                path="/admin/services" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminServices />
                   </ProtectedRoute>
                 } 
               />

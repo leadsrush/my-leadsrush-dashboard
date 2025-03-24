@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { ChevronLeft, LayoutDashboard, MessageSquare, Briefcase, Settings, Users, List } from 'lucide-react';
+import { ChevronLeft, LayoutDashboard, MessageSquare, Briefcase, Settings, Users, List, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/context/AuthContext';
@@ -44,6 +44,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       icon: List,
       roles: ['client']
     },
+    // Admin-only services management
+    {
+      name: 'Manage Services',
+      href: '/admin/services',
+      icon: BarChart,
+      roles: ['admin']
+    },
     // Admin/internal team items
     {
       name: 'Clients',
@@ -79,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     
     // For other paths, check if the current path starts with the given path
     return location.pathname === path || 
-           (path !== '/' && location.pathname.startsWith(path + '/'));
+           (path !== '/' && location.pathname.startsWith(path));
   };
 
   return (
