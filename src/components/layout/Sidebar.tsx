@@ -62,7 +62,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     },
   ];
   
-  // Admin/Team sidebar navigation items
+  // Team sidebar navigation items
   const teamNavItems = [
     {
       title: 'Dashboard',
