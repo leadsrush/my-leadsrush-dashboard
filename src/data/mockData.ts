@@ -1,4 +1,3 @@
-
 // Define types
 export type UserRole = 'admin' | 'project_manager' | 'team_member' | 'client';
 
@@ -57,6 +56,29 @@ export interface Message {
   content: string;
   timestamp: string;
   read: boolean;
+}
+
+// New Invoice types
+export type InvoiceStatus = 'pending' | 'paid';
+
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface Invoice {
+  id: string;
+  number: string;
+  clientId: string;
+  issueDate: string;
+  dueDate: string;
+  items: InvoiceItem[];
+  status: InvoiceStatus;
+  total: number;
+  notes?: string;
 }
 
 // Mock data
@@ -284,6 +306,62 @@ export const messages: Message[] = [
   }
 ];
 
+// New Invoices data
+export const invoices: Invoice[] = [
+  {
+    id: 'inv1',
+    number: 'INV-2023-001',
+    clientId: 'client1',
+    issueDate: '2023-11-01',
+    dueDate: '2023-11-15',
+    items: [
+      {
+        id: 'item1',
+        description: 'SEO Optimization Services',
+        quantity: 1,
+        unitPrice: 500,
+        total: 500
+      },
+      {
+        id: 'item2',
+        description: 'Content Creation',
+        quantity: 4,
+        unitPrice: 125,
+        total: 500
+      }
+    ],
+    status: 'paid',
+    total: 1000,
+    notes: 'Thank you for your business!'
+  },
+  {
+    id: 'inv2',
+    number: 'INV-2023-002',
+    clientId: 'client2',
+    issueDate: '2023-12-01',
+    dueDate: '2023-12-15',
+    items: [
+      {
+        id: 'item3',
+        description: 'PPC Campaign Setup',
+        quantity: 1,
+        unitPrice: 750,
+        total: 750
+      },
+      {
+        id: 'item4',
+        description: 'Social Media Marketing',
+        quantity: 1,
+        unitPrice: 600,
+        total: 600
+      }
+    ],
+    status: 'pending',
+    total: 1350,
+    notes: 'Net 15 payment terms'
+  }
+];
+
 // Helper functions to work with the mock data
 export const getCurrentUser = () => {
   // For demo purposes, we'll return the admin user
@@ -325,4 +403,47 @@ export const getUserById = (userId: string) => {
 
 export const getServiceById = (serviceId: string) => {
   return services.find(service => service.id === serviceId);
+};
+
+// New invoice helper functions
+export const getInvoicesByClient = (clientId: string) => {
+  return invoices.filter(invoice => invoice.clientId === clientId);
+};
+
+export const getPendingInvoicesByClient = (clientId: string) => {
+  return invoices.filter(invoice => invoice.clientId === clientId && invoice.status === 'pending');
+};
+
+export const getPaidInvoicesByClient = (clientId: string) => {
+  return invoices.filter(invoice => invoice.clientId === clientId && invoice.status === 'paid');
+};
+
+export const getTotalPaidByClient = (clientId: string) => {
+  return getPaidInvoicesByClient(clientId).reduce((sum, invoice) => sum + invoice.total, 0);
+};
+
+export const getTotalPendingByClient = (clientId: string) => {
+  return getPendingInvoicesByClient(clientId).reduce((sum, invoice) => sum + invoice.total, 0);
+};
+
+export const getInvoiceById = (invoiceId: string) => {
+  return invoices.find(invoice => invoice.id === invoiceId);
+};
+
+export const generateInvoiceNumber = () => {
+  const prefix = 'INV';
+  const year = new Date().getFullYear();
+  // Get the highest invoice number and increment it
+  const highestNumber = Math.max(
+    ...invoices.map(invoice => {
+      const parts = invoice.number.split('-');
+      if (parts.length === 3) {
+        return parseInt(parts[2], 10);
+      }
+      return 0;
+    })
+  );
+  const newNumber = highestNumber + 1;
+  // Pad to ensure 3 digits
+  return `${prefix}-${year}-${String(newNumber).padStart(3, '0')}`;
 };

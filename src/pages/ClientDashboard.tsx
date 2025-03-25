@@ -1,188 +1,158 @@
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Plus, MessageSquare, Clock, BarChart3 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { PlusCircle, ArrowRight, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import PageTransition from '@/components/layout/PageTransition';
 import ProjectCard from '@/components/dashboard/ProjectCard';
+import InvoiceSummary from '@/components/dashboard/InvoiceSummary';
 import { useAuth } from '@/context/AuthContext';
-import { getProjectsByClient, getUnreadMessageCount, getMessagesByUser, Project, services } from '@/data/mockData';
+import { 
+  getProjectsByClient, 
+  getUnreadMessageCount, 
+  getMessagesByUser, 
+  Project, 
+  services,
+  getInvoicesByClient,
+  getTotalPaidByClient 
+} from '@/data/mockData';
 
 const ClientDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [totalPaid, setTotalPaid] = useState(0);
   
-  // Get client projects
-  const clientProjects = user ? getProjectsByClient(user.id) : [];
-  const unreadMessages = user ? getUnreadMessageCount(user.id) : 0;
-  const recentMessages = user ? getMessagesByUser(user.id).slice(0, 3) : [];
-  
-  // Calculate overall progress
-  const calculateOverallProgress = (projects: Project[]) => {
-    if (projects.length === 0) return 0;
-    const totalProgress = projects.reduce((sum, project) => sum + project.progress, 0);
-    return Math.round(totalProgress / projects.length);
-  };
-  
-  const overallProgress = calculateOverallProgress(clientProjects);
+  useEffect(() => {
+    if (user) {
+      const userProjects = getProjectsByClient(user.id);
+      setProjects(userProjects);
+      setUnreadMessages(getUnreadMessageCount(user.id));
+      setTotalPaid(getTotalPaidByClient(user.id));
+    }
+  }, [user]);
 
+  if (!user) return null;
+
+  const recentInvoices = getInvoicesByClient(user.id).slice(0, 3);
+  
   return (
     <PageTransition className="container py-6 max-w-7xl">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Client Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome back, {user?.name}
-          </p>
-        </div>
-        <Button onClick={() => navigate('/services')}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Project
-        </Button>
-      </div>
-      
-      {/* Dashboard cards */}
-      <div className="grid gap-6 md:grid-cols-3 mb-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Overall Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">{overallProgress}%</div>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <Progress value={overallProgress} className="h-2 mt-2" />
-            </CardContent>
-          </Card>
-        </motion.div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">{clientProjects.length}</div>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {clientProjects.filter(p => p.status === 'in_progress').length} in progress
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          onClick={() => navigate('/messages')}
-          className="cursor-pointer"
-        >
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Messages</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">{unreadMessages}</div>
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {unreadMessages} unread messages
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-      
-      {/* Projects section */}
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Your Projects</h2>
-          <Button variant="outline" size="sm" onClick={() => navigate('/projects')}>
-            View all
-          </Button>
-        </div>
-        
-        {clientProjects.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {clientProjects.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + index * 0.1 }}
-              >
-                <ProjectCard project={project} />
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <Card className="bg-muted/50">
-            <CardContent className="flex flex-col items-center justify-center py-8">
-              <p className="text-muted-foreground mb-4">You don't have any projects yet</p>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/services')}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Start a new project
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        <h1 className="text-3xl font-bold tracking-tight">Client Dashboard</h1>
+        <p className="text-muted-foreground">
+          Welcome back, {user.name}. Here's an overview of your marketing projects.
+        </p>
       </div>
       
-      {/* Recent messages section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Recent Messages</h2>
-          <Button variant="outline" size="sm" onClick={() => navigate('/messages')}>
-            View all
-          </Button>
-        </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
+            <CardDescription>Current marketing initiatives</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{projects.length}</div>
+          </CardContent>
+          <CardFooter>
+            <Link to="/services" className="text-xs text-muted-foreground hover:underline">
+              View all services
+            </Link>
+          </CardFooter>
+        </Card>
         
         <Card>
-          <CardContent className="p-0">
-            {recentMessages.length > 0 ? (
-              <ScrollArea className="h-[200px]">
-                <div className="divide-y">
-                  {recentMessages.map((message) => (
-                    <div key={message.id} className="p-4 hover:bg-muted/50 transition-colors">
-                      <div className="flex justify-between mb-1">
-                        <span className="font-medium">{message.senderId === user?.id ? 'You' : 'Team'}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(message.timestamp).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm line-clamp-1">{message.content}</p>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            ) : (
-              <div className="p-6 text-center">
-                <p className="text-muted-foreground">No recent messages</p>
-              </div>
-            )}
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Messages</CardTitle>
+            <CardDescription>Communication with your team</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{unreadMessages} unread</div>
           </CardContent>
+          <CardFooter>
+            <Link to="/messages" className="text-xs text-muted-foreground hover:underline">
+              View messages
+            </Link>
+          </CardFooter>
         </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
+            <CardDescription>Lifetime campaign investment</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <DollarSign className="h-5 w-5 mr-2 text-green-500" />
+              <div className="text-2xl font-bold">${totalPaid.toFixed(2)}</div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Link to="/invoices" className="text-xs text-muted-foreground hover:underline">
+              View all invoices
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+      
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="space-y-6 md:col-span-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">Your Projects</h2>
+            <Button variant="outline" asChild>
+              <Link to="/services">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Request New Project
+              </Link>
+            </Button>
+          </div>
+          
+          {projects.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2">
+              {projects.map(project => (
+                <ProjectCard 
+                  key={project.id} 
+                  project={project} 
+                />
+              ))}
+              
+              <Card className="flex flex-col items-center justify-center p-6 border-dashed">
+                <div className="text-center mb-4">
+                  <h3 className="font-medium mb-1">Need another service?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Explore our marketing services
+                  </p>
+                </div>
+                <Button asChild>
+                  <Link to="/services">
+                    Browse Services
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </Card>
+            </div>
+          ) : (
+            <Card className="flex flex-col items-center justify-center p-8 border-dashed">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-medium mb-2">No active projects yet</h3>
+                <p className="text-muted-foreground">
+                  Explore our services and request your first marketing project
+                </p>
+              </div>
+              <Button asChild size="lg">
+                <Link to="/services">
+                  Explore Services
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </Card>
+          )}
+        </div>
+        
+        <div>
+          <InvoiceSummary recentInvoices={recentInvoices} clientId={user.id} />
+        </div>
       </div>
     </PageTransition>
   );

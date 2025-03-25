@@ -15,6 +15,8 @@ import ProjectDetails from "./pages/ProjectDetails";
 import Messages from "./pages/Messages";
 import Services from "./pages/Services";
 import AdminServices from "./pages/AdminServices";
+import AdminInvoices from "./pages/AdminInvoices";
+import ClientInvoices from "./pages/ClientInvoices";
 import Clients from "./pages/Clients";
 import Team from "./pages/Team";
 import Settings from "./pages/Settings";
@@ -139,6 +141,25 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['client']}>
                     <Services />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Invoice routes */}
+              <Route 
+                path="/invoices" 
+                element={
+                  <ProtectedRoute allowedRoles={['client']}>
+                    <ClientInvoices />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/admin/invoices" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminInvoices />
                   </ProtectedRoute>
                 } 
               />
