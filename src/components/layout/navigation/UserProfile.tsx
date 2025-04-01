@@ -4,10 +4,13 @@ import { NavLink } from 'react-router-dom';
 import { LogOut, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { User } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface UserProfileProps {
-  user: User | null;
+  user: {
+    name: string;
+    role: string;
+  } | null;
   logout: () => void;
   closeSidebarOnMobile: () => void;
 }

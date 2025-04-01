@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { toast } from "@/components/ui/use-toast"
 import { useToast } from "@/hooks/use-toast"
 
 interface InvoiceItem {
@@ -28,10 +28,10 @@ const AdminInvoices = () => {
   const [invoiceDate, setInvoiceDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
-  const [newItem, setNewItem] = useState({ description: '', quantity: 0, unitPrice: 0 });
+  const [newItem, setNewItem] = useState<InvoiceItem>({ description: '', quantity: 0, unitPrice: 0 });
   const [totalAmount, setTotalAmount] = useState(0);
   const navigate = useNavigate();
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   useEffect(() => {
     // Calculate total amount whenever invoiceItems change
@@ -41,10 +41,10 @@ const AdminInvoices = () => {
 
   const addInvoiceItem = () => {
     if (newItem.description && newItem.quantity !== undefined && newItem.unitPrice !== undefined) {
-      const item = {
+      const item: InvoiceItem = {
         description: newItem.description,
-        quantity: newItem.quantity, // Ensure quantity is defined
-        unitPrice: newItem.unitPrice // Ensure unitPrice is defined
+        quantity: newItem.quantity,
+        unitPrice: newItem.unitPrice
       };
       
       setInvoiceItems([...invoiceItems, item]);
@@ -58,15 +58,17 @@ const AdminInvoices = () => {
     setInvoiceItems(newItems);
   };
 
-  const updateInvoiceItem = (index: number, field: string, value: any) => {
+  const updateInvoiceItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const newItems = [...invoiceItems];
     if (field === 'quantity' || field === 'unitPrice') {
-      value = parseFloat(value);
-      if (isNaN(value)) {
-        value = 0;
-      }
+      const numValue = parseFloat(value as string);
+      newItems[index] = { 
+        ...newItems[index], 
+        [field]: isNaN(numValue) ? 0 : numValue 
+      };
+    } else {
+      newItems[index] = { ...newItems[index], [field]: value };
     }
-    newItems[index] = { ...newItems[index], [field]: value };
     setInvoiceItems(newItems);
   };
 
@@ -77,7 +79,7 @@ const AdminInvoices = () => {
         title: "Error!",
         description: "Please fill in all fields and add at least one invoice item.",
         variant: "destructive",
-      })
+      });
       return;
     }
 
@@ -95,7 +97,7 @@ const AdminInvoices = () => {
     toast({
       title: "Success!",
       description: "Invoice created successfully.",
-    })
+    });
     // Reset form after submit
     setInvoiceNumber('');
     setClientName('');
