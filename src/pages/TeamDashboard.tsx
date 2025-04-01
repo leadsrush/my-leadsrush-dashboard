@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageTransition from '@/components/layout/PageTransition';
 import ProjectCard from '@/components/dashboard/ProjectCard';
+import AdminServiceAnalytics from '@/components/dashboard/AdminServiceAnalytics';
+import ServiceRecommendation from '@/components/dashboard/ServiceRecommendation';
 import { useAuth } from '@/context/AuthContext';
 import { getUserById, projects, users, getUnreadMessageCount, getProjectsByTeamMember } from '@/data/mockData';
 
@@ -18,17 +19,14 @@ const TeamDashboard = () => {
   const { user, hasRole } = useAuth();
   const navigate = useNavigate();
   
-  // Get relevant projects based on role
   const teamProjects = user ? (
     hasRole('admin') 
       ? projects
       : getProjectsByTeamMember(user.id)
   ) : [];
   
-  // Get active clients
   const activeClients = users.filter(u => u.role === 'client' && u.active);
   
-  // Calculate overall stats
   const activeProjectsCount = projects.filter(p => p.status === 'in_progress').length;
   const completedProjectsCount = projects.filter(p => p.status === 'completed').length;
   const unreadMessages = user ? getUnreadMessageCount(user.id) : 0;
@@ -50,7 +48,6 @@ const TeamDashboard = () => {
         )}
       </div>
       
-      {/* Dashboard cards */}
       <div className="grid gap-6 md:grid-cols-4 mb-8">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -141,7 +138,23 @@ const TeamDashboard = () => {
         </motion.div>
       </div>
       
-      {/* Projects tabs section */}
+      {hasRole(['admin']) && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <AdminServiceAnalytics clients={users.filter(u => u.role === 'client')} projects={projects} />
+        </div>
+      )}
+      
+      {hasRole(['admin']) && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <AdminServiceAnalytics clients={users.filter(u => u.role === 'client')} projects={projects} />
+          </div>
+          <div>
+            <ServiceRecommendation clients={users.filter(u => u.role === 'client')} />
+          </div>
+        </div>
+      )}
+      
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Projects</h2>
@@ -213,7 +226,6 @@ const TeamDashboard = () => {
         </Tabs>
       </div>
       
-      {/* Clients section */}
       {hasRole(['admin', 'project_manager']) && (
         <div>
           <div className="flex justify-between items-center mb-4">

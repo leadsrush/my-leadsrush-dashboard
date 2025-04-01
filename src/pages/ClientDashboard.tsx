@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PlusCircle, ArrowRight, DollarSign } from 'lucide-react';
@@ -7,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import PageTransition from '@/components/layout/PageTransition';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import InvoiceSummary from '@/components/dashboard/InvoiceSummary';
+import ClientServiceAnalytics from '@/components/dashboard/ClientServiceAnalytics';
 import { useAuth } from '@/context/AuthContext';
 import { 
   getProjectsByClient, 
@@ -96,7 +96,7 @@ const ClientDashboard = () => {
         </Card>
       </div>
       
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
         <div className="space-y-6 md:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold tracking-tight">Your Projects</h2>
@@ -153,6 +153,10 @@ const ClientDashboard = () => {
         <div>
           <InvoiceSummary recentInvoices={recentInvoices} clientId={user.id} />
         </div>
+      </div>
+      
+      <div className="mb-6">
+        <ClientServiceAnalytics />
       </div>
     </PageTransition>
   );
