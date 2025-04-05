@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Card,
@@ -25,6 +25,13 @@ const ClientMessage = () => {
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
+  
+  useEffect(() => {
+    // Redirect to messages page if trying to access directly without client
+    if (!client) {
+      navigate('/messages');
+    }
+  }, [client, navigate]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -60,6 +67,9 @@ const ClientMessage = () => {
         description: "The client will receive your message in their dashboard"
       });
       
+      // Navigate to the messages page after sending
+      navigate('/messages');
+      
       setMessage('');
       setFiles([]);
       setIsSending(false);
@@ -85,9 +95,9 @@ const ClientMessage = () => {
         <Button 
           variant="outline" 
           className="mb-6" 
-          onClick={() => navigate(`/clients/${clientId}`)}
+          onClick={() => navigate('/messages')}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Client
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Messages
         </Button>
         
         <Card>

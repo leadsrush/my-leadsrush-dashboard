@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
@@ -7,13 +6,16 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import PageTransition from '@/components/layout/PageTransition';
 import MessageThread from '@/components/dashboard/MessageThread';
+import NewMessageDialog from '@/components/messages/NewMessageDialog';
 import { useAuth } from '@/context/AuthContext';
 import { Message, getMessagesByUser, getUserById, getProjectById } from '@/data/mockData';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const Messages = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -66,7 +68,9 @@ const Messages = () => {
           const otherUser = getUserById(userId);
           title = otherUser?.name || 'Unknown User';
           avatar = otherUser?.avatar || '';
-          subtitle = otherUser?.role === 'client' ? 'Client' : 'Team Member';
+          subtitle = otherUser?.role === 'client' ? 'Client' : 
+                    otherUser?.role === 'admin' ? 'Admin' :
+                    otherUser?.role === 'project_manager' ? 'Project Manager' : 'Team Member';
         }
         
         return {
@@ -100,9 +104,36 @@ const Messages = () => {
     }
   }, [activeConversation]);
   
+  // Create a new conversation with selected user
+  const handleNewConversation = (recipientId: string) => {
+    const conversationId = `user-${recipientId}`;
+    
+    // If conversation already exists, just activate it
+    const existingConversation = conversations.find(c => c.id === conversationId);
+    if (existingConversation) {
+      setActiveConversation(conversationId);
+      return;
+    }
+    
+    // Otherwise, create a new conversation (this would normally be done by the backend)
+    // For the demo, we'll just show a toast and set the active conversation
+    toast({
+      title: "New conversation created",
+      description: "You can now send messages to this user"
+    });
+    
+    setActiveConversation(conversationId);
+  };
+  
   // Send message function (would connect to backend in real app)
   const handleSendMessage = (content: string) => {
+    if (!activeConversation || !user) return;
+    
     console.log('Sending message:', content);
+    toast({
+      title: "Message sent",
+      description: "Your message has been delivered"
+    });
     // In a real app, this would send the message to the backend
   };
   
@@ -118,6 +149,7 @@ const Messages = () => {
         <aside className="border-r h-full flex flex-col">
           <div className="p-4 border-b">
             <h2 className="text-xl font-semibold mb-4">Messages</h2>
+            <NewMessageDialog onSelectRecipient={handleNewConversation} />
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -216,7 +248,7 @@ const Messages = () => {
               <div className="max-w-md">
                 <h2 className="text-xl font-semibold mb-2">Select a conversation</h2>
                 <p className="text-muted-foreground">
-                  Choose a conversation from the sidebar to start messaging
+                  Choose a conversation from the sidebar or start a new one
                 </p>
               </div>
             </div>
