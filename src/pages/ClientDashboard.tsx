@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PlusCircle, ArrowRight, DollarSign } from 'lucide-react';
@@ -7,6 +8,7 @@ import PageTransition from '@/components/layout/PageTransition';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import InvoiceSummary from '@/components/dashboard/InvoiceSummary';
 import ClientServiceAnalytics from '@/components/dashboard/ClientServiceAnalytics';
+import NotificationList from '@/components/notifications/NotificationList';
 import { useAuth } from '@/context/AuthContext';
 import { 
   getProjectsByClient, 
@@ -17,18 +19,21 @@ import {
   getInvoicesByClient,
   getTotalPaidByClient 
 } from '@/data/mockData';
+import { getUnreadNotificationCount } from '@/data/notificationData';
 
 const ClientDashboard = () => {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [totalPaid, setTotalPaid] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   
   useEffect(() => {
     if (user) {
       const userProjects = getProjectsByClient(user.id);
       setProjects(userProjects);
       setUnreadMessages(getUnreadMessageCount(user.id));
+      setUnreadNotifications(getUnreadNotificationCount(user.id));
       setTotalPaid(getTotalPaidByClient(user.id));
     }
   }, [user]);
@@ -46,7 +51,7 @@ const ClientDashboard = () => {
         </p>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
@@ -73,6 +78,21 @@ const ClientDashboard = () => {
           <CardFooter>
             <Link to="/messages" className="text-xs text-muted-foreground hover:underline">
               View messages
+            </Link>
+          </CardFooter>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+            <CardDescription>Updates and alerts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{unreadNotifications} new</div>
+          </CardContent>
+          <CardFooter>
+            <Link to="/notifications" className="text-xs text-muted-foreground hover:underline">
+              View notifications
             </Link>
           </CardFooter>
         </Card>
@@ -150,8 +170,9 @@ const ClientDashboard = () => {
           )}
         </div>
         
-        <div>
+        <div className="space-y-6">
           <InvoiceSummary recentInvoices={recentInvoices} clientId={user.id} />
+          <NotificationList />
         </div>
       </div>
       

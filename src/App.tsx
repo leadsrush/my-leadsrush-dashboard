@@ -22,6 +22,7 @@ import ClientDetails from "./pages/ClientDetails";
 import ClientMessage from "./pages/ClientMessage";
 import Team from "./pages/Team";
 import Settings from "./pages/Settings";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 // Components
@@ -134,6 +135,15 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Messages />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/notifications" 
+                element={
+                  <ProtectedRoute>
+                    <Notifications />
                   </ProtectedRoute>
                 } 
               />

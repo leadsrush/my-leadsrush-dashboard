@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -12,8 +13,10 @@ import PageTransition from '@/components/layout/PageTransition';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import AdminServiceAnalytics from '@/components/dashboard/AdminServiceAnalytics';
 import ServiceRecommendation from '@/components/dashboard/ServiceRecommendation';
+import NotificationList from '@/components/notifications/NotificationList';
 import { useAuth } from '@/context/AuthContext';
 import { getUserById, projects, users, getUnreadMessageCount, getProjectsByTeamMember } from '@/data/mockData';
+import { getUnreadNotificationCount } from '@/data/notificationData';
 
 const TeamDashboard = () => {
   const { user, hasRole } = useAuth();
@@ -30,6 +33,7 @@ const TeamDashboard = () => {
   const activeProjectsCount = projects.filter(p => p.status === 'in_progress').length;
   const completedProjectsCount = projects.filter(p => p.status === 'completed').length;
   const unreadMessages = user ? getUnreadMessageCount(user.id) : 0;
+  const unreadNotifications = user ? getUnreadNotificationCount(user.id) : 0;
 
   return (
     <PageTransition className="container py-6 max-w-7xl">
@@ -96,32 +100,7 @@ const TeamDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Team Members</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">
-                  {users.filter(u => u.role !== 'client').length}
-                </div>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {users.filter(u => u.role === 'project_manager').length} project managers
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          onClick={() => navigate('/messages')}
-          className="cursor-pointer"
-        >
-          <Card>
+          <Card onClick={() => navigate('/messages')} className="cursor-pointer">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Messages</CardTitle>
             </CardHeader>
@@ -136,24 +115,40 @@ const TeamDashboard = () => {
             </CardContent>
           </Card>
         </motion.div>
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          onClick={() => navigate('/notifications')}
+          className="cursor-pointer"
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold">{unreadNotifications}</div>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {unreadNotifications} unread notifications
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
       
-      {hasRole(['admin']) && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="lg:col-span-2">
           <AdminServiceAnalytics clients={users.filter(u => u.role === 'client')} projects={projects} />
         </div>
-      )}
-      
-      {hasRole(['admin']) && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <AdminServiceAnalytics clients={users.filter(u => u.role === 'client')} projects={projects} />
-          </div>
-          <div>
-            <ServiceRecommendation clients={users.filter(u => u.role === 'client')} />
-          </div>
+        <div className="space-y-6">
+          <ServiceRecommendation clients={users.filter(u => u.role === 'client')} />
+          <NotificationList />
         </div>
-      )}
+      </div>
       
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">

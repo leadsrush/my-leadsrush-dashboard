@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Mail, Menu, User } from 'lucide-react';
+import { Mail, Menu, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
 import { getUnreadMessageCount } from '@/data/mockData';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -62,13 +63,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               )}
             </Button>
             
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-            >
-              <Bell className="h-5 w-5" />
-            </Button>
+            <NotificationCenter />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

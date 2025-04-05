@@ -1,95 +1,115 @@
 
 import { 
-  LayoutDashboard, 
+  Home, 
   Users, 
   MessageSquare, 
+  FileText, 
   Settings, 
-  FolderKanban,
-  FileText,
-  Briefcase,
-  PackageOpen
+  BarChart3, 
+  CreditCard, 
+  HelpCircle, 
+  LayoutDashboard,
+  Bell,
 } from 'lucide-react';
 import { NavItem } from './types';
 
-// Client sidebar navigation items
+// Navigation items for client dashboard
 export const clientNavItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/client-dashboard',
-    icon: LayoutDashboard
+    icon: Home,
   },
   {
     title: 'Projects',
     href: '/projects',
-    icon: FolderKanban
-  },
-  {
-    title: 'Messages',
-    href: '/messages',
-    icon: MessageSquare
+    icon: FileText,
   },
   {
     title: 'Services',
     href: '/services',
-    icon: PackageOpen
-  },
-  {
-    title: 'Invoices',
-    href: '/invoices',
-    icon: FileText
-  },
-];
-
-// Team sidebar navigation items
-export const teamNavItems: NavItem[] = [
-  {
-    title: 'Dashboard',
-    href: '/team-dashboard',
-    icon: LayoutDashboard
-  },
-  {
-    title: 'Projects',
-    href: '/projects',
-    icon: FolderKanban
+    icon: LayoutDashboard,
   },
   {
     title: 'Messages',
     href: '/messages',
-    icon: MessageSquare
-  },
-];
-
-// Admin sidebar navigation items
-export const adminNavItems: NavItem[] = [
-  {
-    title: 'Team',
-    href: '/team',
-    icon: Users
+    icon: MessageSquare,
   },
   {
-    title: 'Services',
-    href: '/admin/services',
-    icon: PackageOpen
+    title: 'Notifications',
+    href: '/notifications',
+    icon: Bell,
   },
   {
     title: 'Invoices',
-    href: '/admin/invoices',
-    icon: FileText
+    href: '/invoices',
+    icon: CreditCard,
+  },
+  {
+    title: 'Support',
+    href: '/support',
+    icon: HelpCircle,
   },
 ];
 
-// Client management items for admin and project manager
+// Navigation items for the team members
+export const teamNavItems: NavItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/team-dashboard',
+    icon: Home,
+  },
+  {
+    title: 'Projects',
+    href: '/projects',
+    icon: FileText,
+  },
+  {
+    title: 'Messages',
+    href: '/messages',
+    icon: MessageSquare,
+  },
+  {
+    title: 'Notifications',
+    href: '/notifications',
+    icon: Bell,
+  },
+];
+
+// Client management items for project managers and admins
 export const clientManagementItems: NavItem[] = [
   {
     title: 'Clients',
     href: '/clients',
-    icon: Briefcase
+    icon: Users,
   },
 ];
 
-// Settings navigation item (common for all roles)
-export const settingsNavItem: NavItem = {
-  title: 'Settings',
-  href: '/settings',
-  icon: Settings
-};
+// Admin-specific navigation items
+export const adminNavItems: NavItem[] = [
+  {
+    title: 'Team',
+    href: '/team',
+    icon: Users,
+  },
+  {
+    title: 'Analytics',
+    href: '/analytics',
+    icon: BarChart3,
+  },
+  {
+    title: 'Manage Services',
+    href: '/admin/services',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Invoices',
+    href: '/admin/invoices',
+    icon: CreditCard,
+  },
+  {
+    title: 'Settings',
+    href: '/settings',
+    icon: Settings,
+  },
+];
