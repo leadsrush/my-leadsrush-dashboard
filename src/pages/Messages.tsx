@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
@@ -12,10 +13,12 @@ import { Message, getMessagesByUser, getUserById, getProjectById } from '@/data/
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Messages = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -106,23 +109,8 @@ const Messages = () => {
   
   // Create a new conversation with selected user
   const handleNewConversation = (recipientId: string) => {
-    const conversationId = `user-${recipientId}`;
-    
-    // If conversation already exists, just activate it
-    const existingConversation = conversations.find(c => c.id === conversationId);
-    if (existingConversation) {
-      setActiveConversation(conversationId);
-      return;
-    }
-    
-    // Otherwise, create a new conversation (this would normally be done by the backend)
-    // For the demo, we'll just show a toast and set the active conversation
-    toast({
-      title: "New conversation created",
-      description: "You can now send messages to this user"
-    });
-    
-    setActiveConversation(conversationId);
+    // Navigate to the client message page
+    navigate(`/client-message/${recipientId}`);
   };
   
   // Send message function (would connect to backend in real app)
@@ -141,6 +129,18 @@ const Messages = () => {
   const activeConversationDetails = activeConversation 
     ? conversations.find(c => c.id === activeConversation)
     : null;
+
+  // Handle clicking on a conversation
+  const handleConversationClick = (conversation: any) => {
+    // For user conversations, navigate to the client message page
+    if (conversation.id.startsWith('user-')) {
+      const userId = conversation.id.replace('user-', '');
+      navigate(`/client-message/${userId}`);
+    } else {
+      // For project conversations (or if we decide to implement them differently later)
+      setActiveConversation(conversation.id);
+    }
+  };
 
   return (
     <PageTransition className="h-[calc(100vh-4rem)]">
@@ -175,7 +175,7 @@ const Messages = () => {
                       ? "bg-muted"
                       : "hover:bg-muted/50"
                   )}
-                  onClick={() => setActiveConversation(conversation.id)}
+                  onClick={() => handleConversationClick(conversation)}
                 >
                   <div className="flex items-start gap-3">
                     <Avatar className="h-10 w-10 mt-0.5">

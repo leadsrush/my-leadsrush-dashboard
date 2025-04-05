@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -16,6 +17,7 @@ const NewMessageDialog: React.FC<NewMessageDialogProps> = ({ onSelectRecipient }
   const [open, setOpen] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<string>('');
   const { user, hasRole } = useAuth();
+  const navigate = useNavigate();
 
   // Filter users based on the current user's role
   const getAvailableRecipients = (): User[] => {
@@ -39,7 +41,8 @@ const NewMessageDialog: React.FC<NewMessageDialogProps> = ({ onSelectRecipient }
 
   const handleStartConversation = () => {
     if (selectedRecipient) {
-      onSelectRecipient(selectedRecipient);
+      // Navigate to client message page instead of just selecting the recipient
+      navigate(`/client-message/${selectedRecipient}`);
       setOpen(false);
       setSelectedRecipient('');
     }

@@ -21,17 +21,17 @@ const ClientMessage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const client = clientId ? getUserById(clientId) : null;
+  const recipient = clientId ? getUserById(clientId) : null;
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
   
   useEffect(() => {
-    // Redirect to messages page if trying to access directly without client
-    if (!client) {
+    // Redirect to messages page if trying to access directly without recipient
+    if (!recipient) {
       navigate('/messages');
     }
-  }, [client, navigate]);
+  }, [recipient, navigate]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -58,13 +58,13 @@ const ClientMessage = () => {
     
     // Simulate API call with a delay
     setTimeout(() => {
-      console.log("Sending message to client:", clientId);
+      console.log("Sending message to recipient:", clientId);
       console.log("Message:", message);
       console.log("Files:", files);
       
       toast({
         title: "Message sent successfully",
-        description: "The client will receive your message in their dashboard"
+        description: "The recipient will receive your message in their dashboard"
       });
       
       // Navigate to the messages page after sending
@@ -76,13 +76,13 @@ const ClientMessage = () => {
     }, 1500);
   };
   
-  if (!client) {
+  if (!recipient) {
     return (
       <PageTransition>
         <div className="container py-8 text-center">
-          <h1 className="text-3xl font-bold mb-4">Client Not Found</h1>
-          <Button variant="outline" onClick={() => navigate('/clients')}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Clients
+          <h1 className="text-3xl font-bold mb-4">Recipient Not Found</h1>
+          <Button variant="outline" onClick={() => navigate('/messages')}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Messages
           </Button>
         </div>
       </PageTransition>
@@ -104,15 +104,24 @@ const ClientMessage = () => {
           <CardHeader>
             <div className="flex items-center gap-4">
               <Avatar>
-                {client.avatar ? (
-                  <img src={client.avatar} alt={client.name} className="h-full w-full object-cover" />
+                {recipient.avatar ? (
+                  <img src={recipient.avatar} alt={recipient.name} className="h-full w-full object-cover" />
                 ) : (
-                  <span>{client.name.split(' ').map(n => n[0]).join('')}</span>
+                  <span>{recipient.name.split(' ').map(n => n[0]).join('')}</span>
                 )}
               </Avatar>
               <div>
-                <CardTitle>Message to {client.name}</CardTitle>
-                <CardDescription>{client.email}</CardDescription>
+                <CardTitle>
+                  Message to {recipient.name}
+                  {recipient.role && (
+                    <span className="ml-2 text-sm font-normal text-muted-foreground">
+                      ({recipient.role === 'client' ? 'Client' : 
+                        recipient.role === 'admin' ? 'Admin' : 
+                        recipient.role === 'project_manager' ? 'Project Manager' : 'Team Member'})
+                    </span>
+                  )}
+                </CardTitle>
+                <CardDescription>{recipient.email}</CardDescription>
               </div>
             </div>
           </CardHeader>
