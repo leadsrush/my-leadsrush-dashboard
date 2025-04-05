@@ -18,6 +18,8 @@ import AdminServices from "./pages/AdminServices";
 import AdminInvoices from "./pages/AdminInvoices";
 import ClientInvoices from "./pages/ClientInvoices";
 import Clients from "./pages/Clients";
+import ClientDetails from "./pages/ClientDetails";
+import ClientMessage from "./pages/ClientMessage";
 import Team from "./pages/Team";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -174,10 +176,22 @@ const App = () => (
                 } 
               />
               
-              {/* Admin/Team routes with actual pages now */}
+              {/* Client management routes */}
               <Route path="/clients" element={
                 <ProtectedRoute allowedRoles={['admin', 'project_manager']}>
                   <Clients />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/clients/:clientId" element={
+                <ProtectedRoute allowedRoles={['admin', 'project_manager']}>
+                  <ClientDetails />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/client-message/:clientId" element={
+                <ProtectedRoute allowedRoles={['admin', 'project_manager']}>
+                  <ClientMessage />
                 </ProtectedRoute>
               } />
               

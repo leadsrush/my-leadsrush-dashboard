@@ -1,126 +1,116 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { services } from '@/data/mockData';
-import Icon from '@/components/ui/icon-mapper';
-import { IconName } from '@/data/mockData';
+// Import Lucide icons directly
+import { Search, MousePointerClick, FileText, Share2, BarChart } from "lucide-react";
 
-interface ServiceUsageData {
-  name: string;
-  icon: IconName;
-  value: number;
-  color: string;
-}
-
-// This would typically come from the backend
-const generateServiceUsageData = (): ServiceUsageData[] => {
-  const colors = ['#0ea5e9', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
+const ClientServiceAnalytics = () => {
+  const [activeTab, setActiveTab] = useState("what-others-use");
   
-  return services.map((service, index) => ({
-    name: service.name,
-    icon: service.icon,
-    value: Math.floor(Math.random() * 30) + 10, // Simulated percentage between 10-40%
-    color: colors[index % colors.length]
-  }));
-};
-
-const ClientServiceAnalytics: React.FC = () => {
-  const serviceData = generateServiceUsageData();
-  const total = serviceData.reduce((sum, item) => sum + item.value, 0);
+  // This would be real data in a production app
+  const serviceUsage = [
+    { id: 'seo', percentage: 85 },
+    { id: 'ppc', percentage: 72 },
+    { id: 'content', percentage: 64 },
+    { id: 'social', percentage: 58 },
+    { id: 'analytics', percentage: 45 },
+  ];
   
-  // Calculate percentages
-  const dataWithPercent = serviceData.map(item => ({
-    ...item,
-    percent: Math.round((item.value / total) * 100)
-  }));
-  
-  // Sort by usage percentage (descending)
-  const sortedData = [...dataWithPercent].sort((a, b) => b.percent - a.percent);
-  const topServices = sortedData.slice(0, 3);
-  
-  const config = serviceData.reduce(
-    (acc, { name, color }) => ({
-      ...acc,
-      [name]: { color },
-    }),
-    {}
-  );
+  // Helper function to map service ID to icon component
+  const getIconByServiceId = (serviceId: string) => {
+    switch (serviceId) {
+      case 'seo':
+        return <Search className="h-5 w-5" />;
+      case 'ppc':
+        return <MousePointerClick className="h-5 w-5" />;
+      case 'content':
+        return <FileText className="h-5 w-5" />;
+      case 'social':
+        return <Share2 className="h-5 w-5" />;
+      case 'analytics':
+        return <BarChart className="h-5 w-5" />;
+      default:
+        return <BarChart className="h-5 w-5" />;
+    }
+  };
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">What Other Clients Are Doing</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Popular services among our clients
-        </p>
+      <CardHeader>
+        <CardTitle>What Other Clients Are Doing</CardTitle>
+        <CardDescription>
+          Discover which services are popular among other clients
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex flex-col space-y-4">
-            <div className="text-sm font-medium">Top Services</div>
-            {topServices.map((service, idx) => (
-              <div key={idx} className="flex items-center gap-3">
-                <div 
-                  className="p-2 rounded-full" 
-                  style={{ backgroundColor: `${service.color}20` }}
-                >
-                  <Icon name={service.icon} className="h-4 w-4" color={service.color} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-sm">{service.name}</span>
-                    <Badge variant="outline" className="ml-2">
-                      {service.percent}%
-                    </Badge>
-                  </div>
-                  <div className="w-full h-2 bg-muted rounded-full mt-1 overflow-hidden">
-                    <div 
-                      className="h-full rounded-full" 
-                      style={{ 
-                        width: `${service.percent}%`, 
-                        backgroundColor: service.color 
-                      }} 
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-            <p className="text-xs text-muted-foreground mt-2">
-              Based on current client subscriptions
-            </p>
-          </div>
+        <Tabs defaultValue="what-others-use" className="space-y-4" onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="what-others-use">Service Adoption</TabsTrigger>
+            <TabsTrigger value="top-services">Top Services</TabsTrigger>
+          </TabsList>
           
-          <div className="flex justify-center items-center">
-            <ChartContainer className="w-full h-full" config={config}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={serviceData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                    labelLine={false}
-                  >
-                    {serviceData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value, name) => [`${value}%`, name]}
-                    contentStyle={{ borderRadius: '0.375rem', border: '1px solid #e2e8f0' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </div>
-        </div>
+          <TabsContent value="what-others-use" className="space-y-4">
+            {serviceUsage.map((item) => {
+              const service = services.find(s => s.id === item.id);
+              if (!service) return null;
+              
+              return (
+                <div key={service.id} className="space-y-2">
+                  <div className="flex justify-between">
+                    <div className="flex items-center">
+                      <div className="mr-2 bg-primary/10 p-1.5 rounded-full">
+                        {getIconByServiceId(service.id)}
+                      </div>
+                      <span className="font-medium">{service.name}</span>
+                    </div>
+                    <span className="text-sm">{item.percentage}%</span>
+                  </div>
+                  <Progress value={item.percentage} />
+                </div>
+              );
+            })}
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              Percentage of clients using each service
+            </p>
+          </TabsContent>
+          
+          <TabsContent value="top-services" className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {serviceUsage
+                .sort((a, b) => b.percentage - a.percentage)
+                .slice(0, 4)
+                .map((item) => {
+                  const service = services.find(s => s.id === item.id);
+                  if (!service) return null;
+                  
+                  return (
+                    <Card key={service.id} className="bg-muted/50">
+                      <CardHeader className="p-4 pb-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="mr-2 bg-primary/10 p-1.5 rounded-full">
+                              {getIconByServiceId(service.id)}
+                            </div>
+                            <CardTitle className="text-base">{service.name}</CardTitle>
+                          </div>
+                          <span className="text-sm font-bold">{item.percentage}%</span>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <p className="text-sm text-muted-foreground">
+                          {service.description}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              }
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
