@@ -6,10 +6,11 @@ import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { services } from '@/data/mockData';
 import Icon from '@/components/ui/icon-mapper';
+import { IconName } from '@/data/mockData';
 
 interface ServiceUsageData {
   name: string;
-  icon: string;
+  icon: IconName;
   value: number;
   color: string;
 }
@@ -66,7 +67,7 @@ const ClientServiceAnalytics: React.FC = () => {
                   className="p-2 rounded-full" 
                   style={{ backgroundColor: `${service.color}20` }}
                 >
-                  <Icon name={service.icon} className="h-4 w-4" style={{ color: service.color }} />
+                  <Icon name={service.icon} className="h-4 w-4" color={service.color} />
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
@@ -94,30 +95,29 @@ const ClientServiceAnalytics: React.FC = () => {
           
           <div className="flex justify-center items-center">
             <ChartContainer className="w-full h-full" config={config}>
-              <PieChart>
-                <Pie
-                  data={serviceData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={2}
-                  dataKey="value"
-                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}
-                >
-                  {serviceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value, name) => [`${value}%`, name]}
-                  contentStyle={{ borderRadius: '0.375rem', border: '1px solid #e2e8f0' }}
-                />
-              </PieChart>
-              <ChartLegend verticalAlign="bottom">
-                <ChartLegendContent />
-              </ChartLegend>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={serviceData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                    labelLine={false}
+                  >
+                    {serviceData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value, name) => [`${value}%`, name]}
+                    contentStyle={{ borderRadius: '0.375rem', border: '1px solid #e2e8f0' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </ChartContainer>
           </div>
         </div>
