@@ -2,10 +2,19 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
+// Get environment variables with fallbacks
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+// Check if environment variables are available
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase environment variables are missing. Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.');
+}
+
 // Supabase client
 export const supabase = createClient<Database>(
-  import.meta.env.VITE_SUPABASE_URL as string,
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string
+  supabaseUrl,
+  supabaseAnonKey
 );
 
 // Auth helper functions
