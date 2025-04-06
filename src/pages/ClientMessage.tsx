@@ -12,26 +12,42 @@ import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Send, PaperclipIcon } from 'lucide-react';
-import { getUserById } from '@/data/mockData';
+import { getUserById, getMessagesByUser } from '@/data/mockData';
 import PageTransition from '@/components/layout/PageTransition';
 import { useToast } from '@/hooks/use-toast';
+import { Message } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
 
 const ClientMessage = () => {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const recipient = clientId ? getUserById(clientId) : null;
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
-  
+  const [existingMessages, setExistingMessages] = useState<Message[]>([]);
+
   useEffect(() => {
     // Redirect to messages page if trying to access directly without recipient
-    if (!recipient) {
+    if (!recipient || !user) {
       navigate('/messages');
+      return;
     }
-  }, [recipient, navigate]);
+
+    // Load any existing messages between these users
+    if (user) {
+      const allMessages = getMessagesByUser(user.id);
+      const relevantMessages = allMessages.filter(msg => 
+        (msg.senderId === user.id && msg.recipientId === clientId) || 
+        (msg.senderId === clientId && msg.recipientId === user.id)
+      ).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      
+      setExistingMessages(relevantMessages);
+    }
+  }, [recipient, navigate, user, clientId]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -54,26 +70,51 @@ const ClientMessage = () => {
       return;
     }
     
+    if (!user || !recipient) {
+      toast({
+        title: "Error",
+        description: "Missing user or recipient information",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSending(true);
     
-    // Simulate API call with a delay
+    // Create file attachments mention if files are present
+    const fileAttachmentsText = files.length > 0 
+      ? `\n[Attached ${files.length} file${files.length > 1 ? 's' : ''}]` 
+      : '';
+    
+    // Create a new message object
+    const newMessage: Message = {
+      id: `msg_${Date.now()}`,
+      content: message + fileAttachmentsText,
+      senderId: user.id,
+      recipientId: clientId,
+      timestamp: new Date().toISOString(),
+      read: false,
+    };
+    
+    // In a real app, this would be an API call
     setTimeout(() => {
       console.log("Sending message to recipient:", clientId);
-      console.log("Message:", message);
+      console.log("Message:", newMessage);
       console.log("Files:", files);
+      
+      // Add the message to our local state
+      setExistingMessages(prev => [...prev, newMessage]);
       
       toast({
         title: "Message sent successfully",
         description: "The recipient will receive your message in their dashboard"
       });
       
-      // Navigate to the messages page after sending
-      navigate('/messages');
-      
+      // Clear the form
       setMessage('');
       setFiles([]);
       setIsSending(false);
-    }, 1500);
+    }, 500);
   };
   
   if (!recipient) {
@@ -100,6 +141,37 @@ const ClientMessage = () => {
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Messages
         </Button>
         
+        {/* Message history section */}
+        {existingMessages.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Message History</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {existingMessages.map((msg) => {
+                const isFromMe = msg.senderId === user?.id;
+                return (
+                  <div key={msg.id} className={`flex ${isFromMe ? 'justify-end' : 'justify-start'}`}>
+                    <div 
+                      className={`rounded-lg p-3 max-w-[80%] ${
+                        isFromMe 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+                      <p className="text-xs opacity-70 mt-1">
+                        {new Date(msg.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* New message card */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">

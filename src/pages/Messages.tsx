@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -21,15 +21,23 @@ const Messages = () => {
   const navigate = useNavigate();
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
   
   // Get user messages
   const allMessages = user ? getMessagesByUser(user.id) : [];
+  
+  useEffect(() => {
+    // Update the messages state when allMessages changes
+    if (user) {
+      setMessages(allMessages);
+    }
+  }, [allMessages, user]);
   
   // Group messages by conversation
   const conversations = React.useMemo(() => {
     const conversationMap = new Map<string, Message[]>();
     
-    allMessages.forEach(message => {
+    messages.forEach(message => {
       // For project messages
       if (message.projectId) {
         const key = `project-${message.projectId}`;
@@ -87,7 +95,7 @@ const Messages = () => {
         };
       })
       .sort((a, b) => new Date(b.latestMessage.timestamp).getTime() - new Date(a.latestMessage.timestamp).getTime());
-  }, [allMessages, user?.id]);
+  }, [messages, user?.id]);
   
   // Filter conversations by search term
   const filteredConversations = conversations.filter(
@@ -102,10 +110,23 @@ const Messages = () => {
   // Mark messages as read (in a real app, this would update the backend)
   React.useEffect(() => {
     if (activeConversation) {
+      // Update local message state to mark as read
+      setMessages(prev => 
+        prev.map(msg => {
+          if (activeConversation.startsWith('user-')) {
+            const userId = activeConversation.replace('user-', '');
+            if (msg.senderId === userId && msg.recipientId === user?.id && !msg.read) {
+              return { ...msg, read: true };
+            }
+          }
+          return msg;
+        })
+      );
+      
       // This would be an API call in a real app
       console.log(`Marking messages in ${activeConversation} as read`);
     }
-  }, [activeConversation]);
+  }, [activeConversation, user?.id]);
   
   // Create a new conversation with selected user
   const handleNewConversation = (recipientId: string) => {
@@ -117,12 +138,38 @@ const Messages = () => {
   const handleSendMessage = (content: string) => {
     if (!activeConversation || !user) return;
     
-    console.log('Sending message:', content);
+    // Generate a unique ID for the new message
+    const newMessageId = `msg_${Date.now()}`;
+    
+    // Parse the conversation ID to get the recipient ID
+    let recipientId = '';
+    if (activeConversation.startsWith('user-')) {
+      recipientId = activeConversation.replace('user-', '');
+    } else {
+      // For project messages, we would handle differently
+      return;
+    }
+    
+    // Create a new message object
+    const newMessage: Message = {
+      id: newMessageId,
+      content,
+      senderId: user.id,
+      recipientId,
+      timestamp: new Date().toISOString(),
+      read: false,
+    };
+    
+    // Add the new message to our local state
+    setMessages(prev => [...prev, newMessage]);
+    
     toast({
       title: "Message sent",
       description: "Your message has been delivered"
     });
+    
     // In a real app, this would send the message to the backend
+    console.log('New message created:', newMessage);
   };
   
   // Get active conversation details

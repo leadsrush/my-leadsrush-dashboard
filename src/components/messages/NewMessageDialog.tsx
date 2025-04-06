@@ -41,8 +41,7 @@ const NewMessageDialog: React.FC<NewMessageDialogProps> = ({ onSelectRecipient }
 
   const handleStartConversation = () => {
     if (selectedRecipient) {
-      // Navigate to client message page instead of just selecting the recipient
-      navigate(`/client-message/${selectedRecipient}`);
+      onSelectRecipient(selectedRecipient);
       setOpen(false);
       setSelectedRecipient('');
     }
