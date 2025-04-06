@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
@@ -12,46 +12,89 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import PageTransition from '@/components/layout/PageTransition';
 import { useAuth } from '@/context/AuthContext';
-import { 
-  getNotificationsByUser, 
-  markAllNotificationsAsRead 
-} from '@/data/notificationData';
 import { NotificationItem } from '@/components/notifications/NotificationItem';
 import { NotificationType } from '@/types/notification';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 const Notifications = () => {
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('all');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  if (!user) return null;
-  
-  const allNotifications = getNotificationsByUser(user.id);
-  
-  // Filter notifications based on active tab
-  const filteredNotifications = activeTab === 'all' 
-    ? allNotifications 
-    : allNotifications.filter(n => n.type === activeTab);
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!userProfile) return;
+      
+      setLoading(true);
+      try {
+        let query = supabase
+          .from('notifications')
+          .select('*')
+          .eq('userId', userProfile.id)
+          .order('createdAt', { ascending: false });
+          
+        if (activeTab !== 'all') {
+          query = query.eq('type', activeTab);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        setNotifications(data || []);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        toast({
+          title: "Failed to load notifications",
+          description: "Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchNotifications();
+  }, [userProfile, activeTab, refreshKey]);
   
   // Group notifications by date
-  const groupedNotifications = filteredNotifications.reduce((groups, notification) => {
-    const date = format(notification.createdAt, 'yyyy-MM-dd');
+  const groupedNotifications = notifications.reduce((groups, notification) => {
+    const date = format(new Date(notification.createdAt), 'yyyy-MM-dd');
     if (!groups[date]) {
       groups[date] = [];
     }
     groups[date].push(notification);
     return groups;
-  }, {} as Record<string, typeof allNotifications>);
+  }, {} as Record<string, typeof notifications>);
   
-  const handleMarkAllAsRead = () => {
-    markAllNotificationsAsRead(user.id);
-    setRefreshKey(prev => prev + 1);
-    toast({
-      title: "Notifications marked as read",
-      description: "All notifications have been marked as read.",
-    });
+  const handleMarkAllAsRead = async () => {
+    if (!userProfile) return;
+    
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('userId', userProfile.id)
+        .eq('read', false);
+        
+      if (error) throw error;
+      
+      setRefreshKey(prev => prev + 1);
+      toast({
+        title: "Notifications marked as read",
+        description: "All notifications have been marked as read.",
+      });
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notifications as read.",
+        variant: "destructive",
+      });
+    }
   };
   
   const notificationTypes: { value: string, label: string }[] = [
@@ -63,7 +106,7 @@ const Notifications = () => {
   ];
   
   // Add client type for admin and project managers
-  if (user.role === 'admin' || user.role === 'project_manager') {
+  if (userProfile?.role === 'admin' || userProfile?.role === 'project_manager') {
     notificationTypes.splice(1, 0, { value: 'client', label: 'Clients' });
   }
   
@@ -104,7 +147,11 @@ const Notifications = () => {
           
           <TabsContent value={activeTab} className="m-0">
             <ScrollArea className="h-[calc(100vh-240px)]">
-              {Object.keys(groupedNotifications).length > 0 ? (
+              {loading ? (
+                <div className="flex justify-center p-8">
+                  <p>Loading notifications...</p>
+                </div>
+              ) : Object.keys(groupedNotifications).length > 0 ? (
                 <div className="divide-y" key={refreshKey}>
                   {Object.entries(groupedNotifications).map(([date, notifications]) => (
                     <div key={date}>

@@ -2,12 +2,12 @@
 export interface Notification {
   id: string;
   userId: string;
-  type: 'message' | 'project' | 'invoice' | 'system' | 'client';
+  type: NotificationType;
   title: string;
   content: string;
   link?: string;
   read: boolean;
-  createdAt: Date;
+  createdAt: string;
 }
 
-export type NotificationType = Notification['type'];
+export type NotificationType = 'message' | 'project' | 'invoice' | 'system' | 'client';

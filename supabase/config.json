@@ -1,0 +1,325 @@
+
+{
+  "project": {
+    "name": "project-management-app",
+    "description": "Project management application with client and team portals"
+  },
+  "tables": [
+    {
+      "name": "profiles",
+      "columns": [
+        { "name": "id", "type": "uuid", "primaryKey": true },
+        { "name": "name", "type": "text" },
+        { "name": "email", "type": "text" },
+        { "name": "role", "type": "text" },
+        { "name": "avatar", "type": "text", "nullable": true },
+        { "name": "active", "type": "boolean", "default": true },
+        { "name": "created_at", "type": "timestamp", "default": "now()" }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "Users can view their own profile",
+            "definition": "(auth.uid() = id)",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Users can update their own profile",
+            "definition": "(auth.uid() = id)",
+            "operation": "UPDATE"
+          },
+          {
+            "name": "Admins can view all profiles",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Project managers can view team profiles",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'project_manager')",
+            "operation": "SELECT"
+          }
+        ]
+      }
+    },
+    {
+      "name": "projects",
+      "columns": [
+        { "name": "id", "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        { "name": "name", "type": "text" },
+        { "name": "description", "type": "text" },
+        { "name": "status", "type": "text" },
+        { "name": "progress", "type": "integer", "default": 0 },
+        { "name": "clientId", "type": "uuid", "references": "profiles.id" },
+        { "name": "projectManagerId", "type": "uuid", "references": "profiles.id" },
+        { "name": "startDate", "type": "timestamp" },
+        { "name": "endDate", "type": "timestamp", "nullable": true },
+        { "name": "created_at", "type": "timestamp", "default": "now()" }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "Clients can view their own projects",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) = 'client' AND clientId = auth.uid()",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Team members can view assigned projects",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'project_manager', 'team_member')",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Project managers and admins can update projects",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'project_manager')",
+            "operation": "UPDATE"
+          },
+          {
+            "name": "Project managers and admins can create projects",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'project_manager')",
+            "operation": "INSERT"
+          }
+        ]
+      }
+    },
+    {
+      "name": "project_team_members",
+      "columns": [
+        { "name": "id", "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        { "name": "projectId", "type": "uuid", "references": "projects.id" },
+        { "name": "userId", "type": "uuid", "references": "profiles.id" }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "View project team members",
+            "definition": "true",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Project managers and admins can manage team",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'project_manager')",
+            "operation": "INSERT"
+          },
+          {
+            "name": "Project managers and admins can remove team members",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'project_manager')",
+            "operation": "DELETE"
+          }
+        ]
+      }
+    },
+    {
+      "name": "project_services",
+      "columns": [
+        { "name": "id", "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        { "name": "projectId", "type": "uuid", "references": "projects.id" },
+        { "name": "serviceId", "type": "uuid", "references": "services.id" }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "View project services",
+            "definition": "true",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Project managers and admins can manage services",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'project_manager')",
+            "operation": "INSERT"
+          },
+          {
+            "name": "Project managers and admins can remove services",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'project_manager')",
+            "operation": "DELETE"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tasks",
+      "columns": [
+        { "name": "id", "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        { "name": "projectId", "type": "uuid", "references": "projects.id" },
+        { "name": "title", "type": "text" },
+        { "name": "description", "type": "text" },
+        { "name": "status", "type": "text" },
+        { "name": "assigneeId", "type": "uuid", "references": "profiles.id" },
+        { "name": "dueDate", "type": "timestamp", "nullable": true },
+        { "name": "created_at", "type": "timestamp", "default": "now()" }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "Team members can view tasks",
+            "definition": "true", 
+            "operation": "SELECT"
+          },
+          {
+            "name": "Assigned team members can update their tasks",
+            "definition": "assigneeId = auth.uid() OR (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'project_manager')",
+            "operation": "UPDATE"
+          },
+          {
+            "name": "Project managers and admins can manage tasks",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'project_manager')",
+            "operation": "INSERT"
+          }
+        ]
+      }
+    },
+    {
+      "name": "services",
+      "columns": [
+        { "name": "id", "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        { "name": "name", "type": "text" },
+        { "name": "description", "type": "text" },
+        { "name": "price", "type": "numeric" },
+        { "name": "icon", "type": "text" },
+        { "name": "active", "type": "boolean", "default": true },
+        { "name": "created_at", "type": "timestamp", "default": "now()" }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "Everyone can view active services",
+            "definition": "active = true",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Admins can manage services",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'",
+            "operation": "ALL"
+          }
+        ]
+      }
+    },
+    {
+      "name": "messages",
+      "columns": [
+        { "name": "id", "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        { "name": "senderId", "type": "uuid", "references": "profiles.id" },
+        { "name": "recipientId", "type": "uuid", "references": "profiles.id", "nullable": true },
+        { "name": "projectId", "type": "uuid", "references": "projects.id", "nullable": true },
+        { "name": "content", "type": "text" },
+        { "name": "read", "type": "boolean", "default": false },
+        { "name": "timestamp", "type": "timestamp", "default": "now()" }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "Users can view messages they've sent or received",
+            "definition": "senderId = auth.uid() OR recipientId = auth.uid() OR (projectId IN (SELECT projectId FROM project_team_members WHERE userId = auth.uid()))",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Users can send messages",
+            "definition": "senderId = auth.uid()",
+            "operation": "INSERT"
+          },
+          {
+            "name": "Users can mark messages as read",
+            "definition": "recipientId = auth.uid()",
+            "operation": "UPDATE"
+          }
+        ]
+      }
+    },
+    {
+      "name": "notifications",
+      "columns": [
+        { "name": "id", "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        { "name": "userId", "type": "uuid", "references": "profiles.id" },
+        { "name": "type", "type": "text" },
+        { "name": "title", "type": "text" },
+        { "name": "content", "type": "text" },
+        { "name": "link", "type": "text", "nullable": true },
+        { "name": "read", "type": "boolean", "default": false },
+        { "name": "createdAt", "type": "timestamp", "default": "now()" }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "Users can view their own notifications",
+            "definition": "userId = auth.uid()",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Users can mark their notifications as read",
+            "definition": "userId = auth.uid()",
+            "operation": "UPDATE"
+          },
+          {
+            "name": "System can create notifications",
+            "definition": "true",
+            "operation": "INSERT"
+          }
+        ]
+      }
+    },
+    {
+      "name": "invoices",
+      "columns": [
+        { "name": "id", "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        { "name": "clientId", "type": "uuid", "references": "profiles.id" },
+        { "name": "projectId", "type": "uuid", "references": "projects.id", "nullable": true },
+        { "name": "amount", "type": "numeric" },
+        { "name": "status", "type": "text" },
+        { "name": "dueDate", "type": "timestamp" },
+        { "name": "issueDate", "type": "timestamp" },
+        { "name": "created_at", "type": "timestamp", "default": "now()" }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "Clients can view their own invoices",
+            "definition": "clientId = auth.uid()",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Admins can manage invoices",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin')",
+            "operation": "ALL"
+          }
+        ]
+      }
+    },
+    {
+      "name": "invoice_items",
+      "columns": [
+        { "name": "id", "type": "uuid", "primaryKey": true, "default": "gen_random_uuid()" },
+        { "name": "invoiceId", "type": "uuid", "references": "invoices.id" },
+        { "name": "description", "type": "text" },
+        { "name": "quantity", "type": "integer" },
+        { "name": "unitPrice", "type": "numeric" },
+        { "name": "total", "type": "numeric" }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "Users can view invoice items for their invoices",
+            "definition": "invoiceId IN (SELECT id FROM invoices WHERE clientId = auth.uid() OR (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin'))",
+            "operation": "SELECT"
+          },
+          {
+            "name": "Admins can manage invoice items",
+            "definition": "(SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin')",
+            "operation": "ALL"
+          }
+        ]
+      }
+    }
+  ],
+  "storage": [
+    {
+      "name": "avatars",
+      "public": true
+    },
+    {
+      "name": "project_files",
+      "public": false
+    },
+    {
+      "name": "message_attachments",
+      "public": false
+    }
+  ]
+}

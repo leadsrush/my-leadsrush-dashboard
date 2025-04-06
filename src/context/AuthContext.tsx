@@ -1,84 +1,154 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole, users } from '@/data/mockData';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase, getCurrentUser } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
   isAuthenticated: boolean;
-  hasRole: (roles: UserRole | UserRole[]) => boolean;
+  user: User | null;
+  userProfile: any | null;
+  isLoading: boolean;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, userData: any) => Promise<any>;
+  signOut: () => Promise<void>;
+  hasRole: (roles: string | string[]) => boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  isAuthenticated: false,
+  user: null,
+  userProfile: null,
+  isLoading: true,
+  signIn: async () => ({}),
+  signUp: async () => ({}),
+  signOut: async () => {},
+  hasRole: () => false,
+});
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check for existing session on mount
-    const savedUser = localStorage.getItem('leadsrushUser');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    const fetchUser = async () => {
+      try {
+        const userData = await getCurrentUser();
+        if (userData) {
+          setUser(userData);
+          setUserProfile(userData.profile);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+
+    // Set up auth listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const userData = await getCurrentUser();
+        if (userData) {
+          setUser(userData);
+          setUserProfile(userData.profile);
+          setIsAuthenticated(true);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setUserProfile(null);
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // In a real app, this would make an API call
-    // For demo purposes, we'll use our mock data
+  const signInHandler = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
     
-    // Simple validation for demo
-    if (!email || !password) {
-      return false;
+    // Fetch profile after sign in
+    if (data.user) {
+      const userData = await getCurrentUser();
+      if (userData) {
+        setUser(userData);
+        setUserProfile(userData.profile);
+        setIsAuthenticated(true);
+      }
     }
     
-    // Simple mock authentication
-    const foundUser = users.find(u => u.email === email && u.active);
-    
-    if (foundUser) {
-      // In a real app, we would verify the password here
-      setUser(foundUser);
-      localStorage.setItem('leadsrushUser', JSON.stringify(foundUser));
-      return true;
-    }
-    
-    return false;
+    return { data, error };
   };
 
-  const logout = () => {
+  const signUpHandler = async (email: string, password: string, userData: any) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData,
+      },
+    });
+    
+    if (data.user && !error) {
+      // Create profile record
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        email: email,
+        role: userData.role,
+        name: userData.name,
+        active: true,
+        created_at: new Date().toISOString(),
+      });
+      
+      // Fetch profile after sign up
+      const newUserData = await getCurrentUser();
+      if (newUserData) {
+        setUser(newUserData);
+        setUserProfile(newUserData.profile);
+        setIsAuthenticated(true);
+      }
+    }
+    
+    return { data, error };
+  };
+
+  const signOutHandler = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('leadsrushUser');
+    setUserProfile(null);
+    setIsAuthenticated(false);
   };
 
-  const hasRole = (roles: UserRole | UserRole[]): boolean => {
-    if (!user) return false;
+  const hasRole = (roles: string | string[]) => {
+    if (!userProfile) return false;
     
-    if (Array.isArray(roles)) {
-      return roles.includes(user.role);
-    }
-    
-    return user.role === roles;
+    const rolesToCheck = Array.isArray(roles) ? roles : [roles];
+    return rolesToCheck.includes(userProfile.role);
   };
 
-  const value = {
-    user,
-    loading,
-    login,
-    logout,
-    isAuthenticated: !!user,
-    hasRole
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+  return (
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        user,
+        userProfile,
+        isLoading,
+        signIn: signInHandler,
+        signUp: signUpHandler,
+        signOut: signOutHandler,
+        hasRole,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};

@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Bell, Mail, FileText, Users, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Notification, NotificationType } from '@/types/notification';
-import { markNotificationAsRead } from '@/data/notificationData';
+import { supabase } from '@/lib/supabase';
 
 interface NotificationItemProps {
   notification: Notification;
@@ -35,9 +35,24 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
     }
   };
   
-  const handleClick = () => {
-    markNotificationAsRead(notification.id);
+  const markNotificationAsRead = async (id: string) => {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+  
+  const handleClick = async () => {
+    if (!notification.read) {
+      await markNotificationAsRead(notification.id);
+    }
+    
     if (onRead) onRead();
+    
     if (notification.link) {
       navigate(notification.link);
     }
@@ -61,7 +76,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
             {notification.title}
           </p>
           <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-            {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
+            {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
           </span>
         </div>
         
