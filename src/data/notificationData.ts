@@ -21,6 +21,7 @@ const createNotification = (
   createdAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)), // Random date within last week
 });
 
+// Export notifications so it can be modified by message functions
 export const notifications: Notification[] = [
   // Client notifications
   createNotification('notif1', 'client1', 'project', 'Project Update', 'Your SEO campaign has new results', '/projects/project1'),

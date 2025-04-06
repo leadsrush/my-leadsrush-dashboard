@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
@@ -23,22 +22,18 @@ const Messages = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   
-  // Get user messages
   const allMessages = user ? getMessagesByUser(user.id) : [];
   
   useEffect(() => {
-    // Update the messages state when allMessages changes
     if (user) {
       setMessages(allMessages);
     }
   }, [allMessages, user]);
   
-  // Group messages by conversation
   const conversations = React.useMemo(() => {
     const conversationMap = new Map<string, Message[]>();
     
     messages.forEach(message => {
-      // For project messages
       if (message.projectId) {
         const key = `project-${message.projectId}`;
         if (!conversationMap.has(key)) {
@@ -46,7 +41,6 @@ const Messages = () => {
         }
         conversationMap.get(key)?.push(message);
       } 
-      // For direct messages
       else if (message.recipientId) {
         const otherUserId = message.senderId === user?.id ? message.recipientId : message.senderId;
         const key = `user-${otherUserId}`;
@@ -57,14 +51,12 @@ const Messages = () => {
       }
     });
     
-    // Convert map to array and sort by latest message
     return Array.from(conversationMap.entries())
       .map(([key, messages]) => {
         const sortedMessages = [...messages].sort(
           (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         
-        // Extract conversation details
         let title = '';
         let avatar = '';
         let subtitle = '';
@@ -97,20 +89,16 @@ const Messages = () => {
       .sort((a, b) => new Date(b.latestMessage.timestamp).getTime() - new Date(a.latestMessage.timestamp).getTime());
   }, [messages, user?.id]);
   
-  // Filter conversations by search term
   const filteredConversations = conversations.filter(
     conv => conv.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  // Get active conversation messages
   const activeMessages = activeConversation 
     ? conversations.find(c => c.id === activeConversation)?.messages || []
     : [];
   
-  // Mark messages as read (in a real app, this would update the backend)
   React.useEffect(() => {
     if (activeConversation) {
-      // Update local message state to mark as read
       setMessages(prev => 
         prev.map(msg => {
           if (activeConversation.startsWith('user-')) {
@@ -123,34 +111,29 @@ const Messages = () => {
         })
       );
       
-      // This would be an API call in a real app
       console.log(`Marking messages in ${activeConversation} as read`);
     }
   }, [activeConversation, user?.id]);
   
-  // Create a new conversation with selected user
   const handleNewConversation = (recipientId: string) => {
-    // Navigate to the client message page
     navigate(`/client-message/${recipientId}`);
   };
   
-  // Send message function (would connect to backend in real app)
   const handleSendMessage = (content: string) => {
     if (!activeConversation || !user) return;
     
-    // Generate a unique ID for the new message
     const newMessageId = `msg_${Date.now()}`;
     
-    // Parse the conversation ID to get the recipient ID
     let recipientId = '';
+    let projectId = null;
+    
     if (activeConversation.startsWith('user-')) {
       recipientId = activeConversation.replace('user-', '');
-    } else {
-      // For project messages, we would handle differently
+    } else if (activeConversation.startsWith('project-')) {
+      projectId = activeConversation.replace('project-', '');
       return;
     }
     
-    // Create a new message object
     const newMessage: Message = {
       id: newMessageId,
       content,
@@ -158,41 +141,56 @@ const Messages = () => {
       recipientId,
       timestamp: new Date().toISOString(),
       read: false,
+      projectId,
     };
     
-    // Add the new message to our local state
     setMessages(prev => [...prev, newMessage]);
+    
+    createMessageNotification(user.id, recipientId, content.substring(0, 30));
     
     toast({
       title: "Message sent",
       description: "Your message has been delivered"
     });
     
-    // In a real app, this would send the message to the backend
     console.log('New message created:', newMessage);
   };
   
-  // Get active conversation details
   const activeConversationDetails = activeConversation 
     ? conversations.find(c => c.id === activeConversation)
     : null;
 
-  // Handle clicking on a conversation
   const handleConversationClick = (conversation: any) => {
-    // For user conversations, navigate to the client message page
     if (conversation.id.startsWith('user-')) {
       const userId = conversation.id.replace('user-', '');
       navigate(`/client-message/${userId}`);
     } else {
-      // For project conversations (or if we decide to implement them differently later)
       setActiveConversation(conversation.id);
     }
+  };
+
+  const createMessageNotification = (senderId: string, recipientId: string, messagePreview: string) => {
+    const sender = getUserById(senderId);
+    if (!sender || !recipientId) return;
+    
+    const notificationId = `notif_${Date.now()}`;
+    
+    const { notifications } = require('@/data/notificationData');
+    notifications.push({
+      id: notificationId,
+      userId: recipientId,
+      type: 'message' as const,
+      title: 'New Message',
+      content: `${sender.name} sent you a message: "${messagePreview}"`,
+      link: '/messages',
+      read: false,
+      createdAt: new Date(),
+    });
   };
 
   return (
     <PageTransition className="h-[calc(100vh-4rem)]">
       <div className="grid h-full" style={{ gridTemplateColumns: '300px 1fr' }}>
-        {/* Sidebar with conversation list */}
         <aside className="border-r h-full flex flex-col">
           <div className="p-4 border-b">
             <h2 className="text-xl font-semibold mb-4">Messages</h2>
@@ -266,7 +264,6 @@ const Messages = () => {
           </ScrollArea>
         </aside>
         
-        {/* Main message area */}
         <main className="flex flex-col h-full">
           {activeConversationDetails ? (
             <>

@@ -28,6 +28,8 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
         return <FileText className="h-4 w-4 text-amber-500" />;
       case 'client':
         return <Users className="h-4 w-4 text-purple-500" />;
+      case 'system':
+        return <AlertCircle className="h-4 w-4 text-gray-500" />;
       default:
         return <Bell className="h-4 w-4 text-gray-500" />;
     }

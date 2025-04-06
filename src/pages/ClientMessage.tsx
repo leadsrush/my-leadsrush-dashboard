@@ -94,6 +94,7 @@ const ClientMessage = () => {
       recipientId: clientId,
       timestamp: new Date().toISOString(),
       read: false,
+      projectId: null, // Fix: Add projectId property with null value
     };
     
     // In a real app, this would be an API call
@@ -109,6 +110,9 @@ const ClientMessage = () => {
         title: "Message sent successfully",
         description: "The recipient will receive your message in their dashboard"
       });
+      
+      // Create a notification for the recipient
+      createMessageNotification(user.id, clientId, "New message");
       
       // Clear the form
       setMessage('');
@@ -263,6 +267,28 @@ const ClientMessage = () => {
       </div>
     </PageTransition>
   );
+};
+
+// Helper function to create notifications for messages
+const createMessageNotification = (senderId: string, recipientId: string, messagePreview: string) => {
+  // Get sender information
+  const sender = getUserById(senderId);
+  if (!sender || !recipientId) return;
+  
+  const notificationId = `notif_${Date.now()}`;
+  
+  // Add to notifications array in notificationData
+  const { notifications } = require('@/data/notificationData');
+  notifications.push({
+    id: notificationId,
+    userId: recipientId,
+    type: 'message' as const,
+    title: 'New Message',
+    content: `${sender.name} sent you a message: "${messagePreview}"`,
+    link: '/messages',
+    read: false,
+    createdAt: new Date(),
+  });
 };
 
 export default ClientMessage;
