@@ -15,6 +15,10 @@ interface ServiceOverviewTabProps {
     count: number;
     clients: number;
   }>;
+  pieData?: Array<{
+    name: string;
+    value: number;
+  }>;
 }
 
 // Helper function to map service ID to icon component
@@ -35,7 +39,7 @@ const getIconByServiceId = (serviceId: string) => {
   }
 };
 
-const ServiceOverviewTab: React.FC<ServiceOverviewTabProps> = ({ sortedByUsage }) => {
+const ServiceOverviewTab: React.FC<ServiceOverviewTabProps> = ({ sortedByUsage, pieData }) => {
   const config = {};
   
   return (

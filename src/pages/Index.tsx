@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -13,7 +12,7 @@ const Index = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, hasRole } = useAuth();
+  const { signIn, hasRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -22,9 +21,9 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      const success = await login(email, password);
+      const { data, error } = await signIn(email, password);
       
-      if (success) {
+      if (!error && data) {
         // Login successful
         toast({
           title: 'Login successful',
@@ -41,15 +40,15 @@ const Index = () => {
         // Login failed
         toast({
           title: 'Login failed',
-          description: 'Invalid email or password',
+          description: error?.message || 'Invalid email or password',
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       toast({
         title: 'Login error',
-        description: 'An unexpected error occurred',
+        description: error.message || 'An unexpected error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -140,7 +139,7 @@ const Index = () => {
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Use any password for demo accounts
+                Use password "password" for demo accounts
               </p>
             </div>
           </div>

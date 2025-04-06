@@ -4,30 +4,27 @@ import { NavLink } from 'react-router-dom';
 import { LogOut, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
+import { ExtendedUser } from '@/context/AuthContext';
 
 interface UserProfileProps {
-  user: {
-    name: string;
-    role: string;
-  } | null;
+  user: ExtendedUser | null;
   logout: () => void;
   closeSidebarOnMobile: () => void;
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({ user, logout, closeSidebarOnMobile }) => {
-  if (!user) return null;
+  if (!user || !user.profile) return null;
   
   return (
     <div className="border-t p-4">
       <div className="flex items-center gap-3 mb-4">
         <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-          {user.name.charAt(0).toUpperCase()}
+          {user.profile.name.charAt(0).toUpperCase()}
         </div>
         <div>
-          <p className="text-sm font-medium leading-none">{user.name}</p>
+          <p className="text-sm font-medium leading-none">{user.profile.name}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            {user.role.replace('_', ' ')}
+            {user.profile.role.replace('_', ' ')}
           </p>
         </div>
       </div>

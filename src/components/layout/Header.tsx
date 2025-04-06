@@ -18,7 +18,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
-  const { user, logout } = useAuth();
+  const { user, signOut: logout } = useAuth();
   const navigate = useNavigate();
   
   // In a real app, this would come from an API
@@ -68,10 +68,10 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="ml-2">
-                  {user.avatar ? (
+                  {user.profile?.avatar ? (
                     <img 
-                      src={user.avatar} 
-                      alt={user.name} 
+                      src={user.profile.avatar} 
+                      alt={user.profile.name} 
                       className="h-8 w-8 rounded-full"
                     />
                   ) : (
@@ -81,8 +81,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <p className="text-sm font-medium">{user.profile?.name}</p>
+                  <p className="text-xs text-muted-foreground">{user.profile?.email}</p>
                 </div>
                 <DropdownMenuItem onClick={handleLogout}>
                   Log out

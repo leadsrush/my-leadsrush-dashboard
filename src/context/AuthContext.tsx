@@ -1,16 +1,31 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, getCurrentUser } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar: string | null;
+  active: boolean;
+}
+
+export interface ExtendedUser extends User {
+  profile: UserProfile;
+}
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: User | null;
-  userProfile: any | null;
+  user: ExtendedUser | null;
+  userProfile: UserProfile | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, userData: any) => Promise<any>;
   signOut: () => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>; // Alias for signIn for backward compatibility
+  logout: () => Promise<void>; // Alias for signOut for backward compatibility
   hasRole: (roles: string | string[]) => boolean;
 }
 
@@ -22,6 +37,8 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({}),
   signUp: async () => ({}),
   signOut: async () => {},
+  login: async () => false,
+  logout: async () => {},
   hasRole: () => false,
 });
 
@@ -29,36 +46,42 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userData = await getCurrentUser();
-        if (userData) {
-          setUser(userData);
-          setUserProfile(userData.profile);
-          setIsAuthenticated(true);
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUser();
-
-    // Set up auth listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Set up auth listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        const userData = await getCurrentUser();
-        if (userData) {
-          setUser(userData);
-          setUserProfile(userData.profile);
-          setIsAuthenticated(true);
+        try {
+          // Get profile data
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileData && !error) {
+            const extendedUser = {
+              ...session.user,
+              profile: profileData
+            } as ExtendedUser;
+            
+            setUser(extendedUser);
+            setUserProfile(profileData);
+            setIsAuthenticated(true);
+          } else {
+            setUser(null);
+            setUserProfile(null);
+            setIsAuthenticated(false);
+            console.error('Profile data not found:', error);
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          setUser(null);
+          setUserProfile(null);
+          setIsAuthenticated(false);
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -67,24 +90,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
+    // THEN check for existing session
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // Get profile data
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileData && !error) {
+            const extendedUser = {
+              ...session.user,
+              profile: profileData
+            } as ExtendedUser;
+            
+            setUser(extendedUser);
+            setUserProfile(profileData);
+            setIsAuthenticated(true);
+          } else {
+            console.error('Profile data not found:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkSession();
+
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
   const signInHandler = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    
-    // Fetch profile after sign in
-    if (data.user) {
-      const userData = await getCurrentUser();
-      if (userData) {
-        setUser(userData);
-        setUserProfile(userData.profile);
-        setIsAuthenticated(true);
-      }
-    }
     
     return { data, error };
   };
@@ -98,34 +146,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     });
     
-    if (data.user && !error) {
-      // Create profile record
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        email: email,
-        role: userData.role,
-        name: userData.name,
-        active: true,
-        created_at: new Date().toISOString(),
-      });
-      
-      // Fetch profile after sign up
-      const newUserData = await getCurrentUser();
-      if (newUserData) {
-        setUser(newUserData);
-        setUserProfile(newUserData.profile);
-        setIsAuthenticated(true);
-      }
-    }
-    
     return { data, error };
   };
 
   const signOutHandler = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    setUserProfile(null);
-    setIsAuthenticated(false);
+  };
+
+  // For backward compatibility
+  const loginHandler = async (email: string, password: string) => {
+    try {
+      const { error } = await signInHandler(email, password);
+      return !error;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    }
   };
 
   const hasRole = (roles: string | string[]) => {
@@ -145,6 +181,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signIn: signInHandler,
         signUp: signUpHandler,
         signOut: signOutHandler,
+        login: loginHandler,
+        logout: signOutHandler,
         hasRole,
       }}
     >

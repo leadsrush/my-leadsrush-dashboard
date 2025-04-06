@@ -18,7 +18,7 @@ const createNotification = (
   content,
   link,
   read,
-  createdAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)), // Random date within last week
+  createdAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString(), // Random date within last week
 });
 
 // Export notifications so it can be modified by message functions
@@ -51,7 +51,7 @@ export const notifications: Notification[] = [
 export const getNotificationsByUser = (userId: string): Notification[] => {
   return notifications
     .filter(notification => notification.userId === userId)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 };
 
 export const getUnreadNotificationCount = (userId: string): number => {

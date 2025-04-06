@@ -303,4 +303,3 @@ export interface Database {
     }
   }
 }
-
