@@ -18,7 +18,7 @@ import { supabase } from "./integrations/supabase/client";
 // Verify Supabase connection
 const verifySupabaseConnection = async () => {
   try {
-    const { error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+    const { error } = await supabase.from('profiles').select('count').single();
     if (error) throw error;
     console.log('✅ Supabase connection established');
   } catch (error) {

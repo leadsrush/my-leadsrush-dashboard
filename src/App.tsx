@@ -9,8 +9,10 @@ import { AnimatePresence } from "framer-motion";
 
 // Pages
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import ClientDashboard from "./pages/ClientDashboard";
 import TeamDashboard from "./pages/TeamDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import ProjectDetails from "./pages/ProjectDetails";
 import Messages from "./pages/Messages";
 import Services from "./pages/Services";
@@ -45,12 +47,15 @@ const ProtectedRoute = ({
   const { isAuthenticated, user, hasRole } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
-  if (allowedRoles.length > 0 && !hasRole(allowedRoles as any)) {
+  if (allowedRoles.length > 0 && !hasRole(allowedRoles)) {
     // Redirect to appropriate dashboard based on role
-    if (hasRole(['admin', 'project_manager', 'team_member'])) {
+    if (hasRole(['admin'])) {
+      return <Navigate to="/admin-dashboard" replace />;
+    }
+    if (hasRole(['project_manager', 'team_member'])) {
       return <Navigate to="/team-dashboard" replace />;
     }
     return <Navigate to="/client-dashboard" replace />;
@@ -93,6 +98,17 @@ const App = () => (
           <Layout>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              
+              {/* Admin routes */}
+              <Route 
+                path="/admin-dashboard" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
               
               {/* Client routes */}
               <Route 
