@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -8,9 +9,22 @@ const Index = () => {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-gray-50 z-0"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative z-10">
           <div className="text-center">
+            <motion.div 
+              className="flex justify-center mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <img 
+                src="/lovable-uploads/4ca15042-e89a-4f8f-8662-4075c5cbe7ca.png" 
+                alt="LeadsRush Africa" 
+                className="h-24 w-24"
+              />
+            </motion.div>
+            
             <motion.h1 
               className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl"
               initial={{ opacity: 0, y: 20 }}
@@ -18,7 +32,7 @@ const Index = () => {
               transition={{ duration: 0.5 }}
             >
               <span className="block">Manage Your Business with</span>
-              <span className="block text-indigo-600">LeadsRush</span>
+              <span className="block text-red-600">LeadsRush Africa</span>
             </motion.h1>
             <motion.p 
               className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl"
@@ -36,7 +50,7 @@ const Index = () => {
             >
               <div className="rounded-md shadow">
                 <Link to="/auth">
-                  <Button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
+                  <Button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700 md:py-4 md:text-lg md:px-10">
                     Login / Register
                   </Button>
                 </Link>
@@ -56,7 +70,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <motion.h2 
-              className="text-base text-indigo-600 font-semibold tracking-wide uppercase"
+              className="text-base text-red-600 font-semibold tracking-wide uppercase"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
@@ -77,7 +91,7 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.8 }}
             >
-              LeadsRush is designed to streamline your client management process, making it easier to focus on growing your business.
+              LeadsRush Africa is designed to streamline your client management process, making it easier to focus on growing your business.
             </motion.p>
           </div>
 
@@ -90,7 +104,7 @@ const Index = () => {
                 transition={{ duration: 0.5, delay: 0.9 }}
               >
                 <dt>
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-red-500 text-white">
                     {/* Heroicon name: outline/globe-alt */}
                     <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
@@ -110,7 +124,7 @@ const Index = () => {
                 transition={{ duration: 0.5, delay: 1.0 }}
               >
                 <dt>
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-red-500 text-white">
                     {/* Heroicon name: outline/scale */}
                     <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.002 0M3 6V4m0 2L5 8m-3 6l4 1m0 0l1-5a5.002 5.002 0 00-6.002 0M3 16V18m0-2l1-5m5 0v2m0 4v2m-5-7l6 1" />
@@ -130,7 +144,7 @@ const Index = () => {
                 transition={{ duration: 0.5, delay: 1.1 }}
               >
                 <dt>
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-red-500 text-white">
                     {/* Heroicon name: outline/lightning-bolt */}
                     <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -150,7 +164,7 @@ const Index = () => {
                 transition={{ duration: 0.5, delay: 1.2 }}
               >
                 <dt>
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-red-500 text-white">
                     {/* Heroicon name: outline/annotation */}
                     <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7m-4-4v8m4-4h12" />
@@ -172,7 +186,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <motion.h2 
-              className="text-base text-indigo-600 font-semibold tracking-wide uppercase"
+              className="text-base text-red-600 font-semibold tracking-wide uppercase"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 1.3 }}
@@ -208,7 +222,7 @@ const Index = () => {
                 <blockquote className="mt-8">
                   <div className="text-base text-gray-500">
                     <p>
-                      “LeadsRush has transformed the way we manage our clients. It's intuitive, efficient, and has significantly improved our productivity.”
+                      "LeadsRush Africa has transformed the way we manage our clients. It's intuitive, efficient, and has significantly improved our productivity."
                     </p>
                   </div>
                   <footer className="mt-3">
@@ -224,7 +238,7 @@ const Index = () => {
                 <blockquote className="mt-8">
                   <div className="text-base text-gray-500">
                     <p>
-                      “We've been using LeadsRush for over a year now, and it's been a game-changer. The invoicing and payment features have saved us countless hours.”
+                      "We've been using LeadsRush Africa for over a year now, and it's been a game-changer. The invoicing and payment features have saved us countless hours."
                     </p>
                   </div>
                   <footer className="mt-3">
@@ -241,16 +255,16 @@ const Index = () => {
       </div>
 
       {/* CTA section */}
-      <div className="bg-indigo-700">
+      <div className="bg-red-700">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
           <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
             <span className="block">Ready to dive in?</span>
-            <span className="block text-indigo-200">Start using LeadsRush today.</span>
+            <span className="block text-red-200">Start using LeadsRush Africa today.</span>
           </h2>
           <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
             <div className="inline-flex rounded-md shadow">
               <Link to="/auth">
-                <Button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10">
+                <Button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-red-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10">
                   Get Started
                 </Button>
               </Link>

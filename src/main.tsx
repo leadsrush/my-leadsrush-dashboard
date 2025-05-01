@@ -26,6 +26,9 @@ const verifySupabaseConnection = async () => {
   }
 };
 
+// Set page title
+document.title = "LeadsRush Africa Dashboard";
+
 // Run verification
 verifySupabaseConnection();
 

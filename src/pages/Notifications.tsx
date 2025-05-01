@@ -1,192 +1,275 @@
 
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from '@/components/ui/tabs';
-import { Card } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { BellIcon, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { NotificationList } from '@/components/notifications/NotificationList';
 import PageTransition from '@/components/layout/PageTransition';
-import { useAuth } from '@/context/AuthContext';
-import { NotificationItem } from '@/components/notifications/NotificationItem';
-import { NotificationType } from '@/types/notification';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { getUserNotifications } from '@/data/notificationData';
+import { Notification } from '@/types/notification';
+import { useAuth } from '@/context/AuthContext';
 
 const Notifications = () => {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<string>('all');
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   
+  const [selectedTab, setSelectedTab] = useState('all');
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  
+  // Fetch notifications data
   useEffect(() => {
-    const fetchNotifications = async () => {
-      if (!userProfile) return;
-      
-      setLoading(true);
-      try {
-        let query = supabase
-          .from('notifications')
-          .select('*')
-          .eq('userId', userProfile.id)
-          .order('createdAt', { ascending: false });
-          
-        if (activeTab !== 'all') {
-          query = query.eq('type', activeTab);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) throw error;
-        setNotifications(data || []);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-        toast({
-          title: "Failed to load notifications",
-          description: "Please try again later.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+    if (user?.id) {
+      // In real app, this would call an API
+      const fetchedNotifications = getUserNotifications(user.id);
+      if (fetchedNotifications) {
+        setNotifications(fetchedNotifications);
       }
-    };
-    
-    fetchNotifications();
-  }, [userProfile, activeTab, refreshKey]);
-  
-  // Group notifications by date
-  const groupedNotifications = notifications.reduce((groups, notification) => {
-    const date = format(new Date(notification.createdAt), 'yyyy-MM-dd');
-    if (!groups[date]) {
-      groups[date] = [];
     }
-    groups[date].push(notification);
-    return groups;
-  }, {} as Record<string, typeof notifications>);
+  }, [user]);
   
-  const handleMarkAllAsRead = async () => {
-    if (!userProfile) return;
+  // Filter notifications based on selected tab
+  const getFilteredNotifications = () => {
+    if (selectedTab === 'all') return notifications;
+    if (selectedTab === 'unread') return notifications.filter(n => !n.read);
+    return notifications.filter(n => n.type === selectedTab);
+  };
+  
+  const filteredNotifications = getFilteredNotifications();
+  
+  // Mark selected notifications as read
+  const markAsRead = () => {
+    setNotifications(prevNotifications =>
+      prevNotifications.map(notification =>
+        selectedNotifications.includes(notification.id)
+          ? { ...notification, read: true }
+          : notification
+      )
+    );
     
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('userId', userProfile.id)
-        .eq('read', false);
-        
-      if (error) throw error;
-      
-      setRefreshKey(prev => prev + 1);
-      toast({
-        title: "Notifications marked as read",
-        description: "All notifications have been marked as read.",
-      });
-    } catch (error) {
-      console.error('Error marking notifications as read:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark notifications as read.",
-        variant: "destructive",
-      });
+    toast({
+      title: "Marked as read",
+      description: `${selectedNotifications.length} notifications marked as read.`
+    });
+    
+    setSelectedNotifications([]);
+    setIsSelectMode(false);
+  };
+  
+  // Delete selected notifications
+  const deleteSelected = () => {
+    setNotifications(prevNotifications =>
+      prevNotifications.filter(
+        notification => !selectedNotifications.includes(notification.id)
+      )
+    );
+    
+    toast({
+      title: "Notifications deleted",
+      description: `${selectedNotifications.length} notifications deleted.`
+    });
+    
+    setSelectedNotifications([]);
+    setIsSelectMode(false);
+  };
+  
+  // Toggle select mode
+  const toggleSelectMode = () => {
+    setIsSelectMode(!isSelectMode);
+    setSelectedNotifications([]);
+  };
+  
+  // Handle notification click - either select or navigate
+  const handleNotificationClick = (id: string, link?: string) => {
+    if (isSelectMode) {
+      toggleNotificationSelection(id);
+    } else if (link) {
+      navigate(link);
     }
   };
   
-  const notificationTypes: { value: string, label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'message', label: 'Messages' },
-    { value: 'project', label: 'Projects' },
-    { value: 'invoice', label: 'Invoices' },
-    { value: 'system', label: 'System' },
-  ];
-  
-  // Add client type for admin and project managers
-  if (userProfile?.role === 'admin' || userProfile?.role === 'project_manager') {
-    notificationTypes.splice(1, 0, { value: 'client', label: 'Clients' });
-  }
-  
-  const handleNotificationRead = () => {
-    setRefreshKey(prev => prev + 1);
+  // Toggle notification selection
+  const toggleNotificationSelection = (id: string) => {
+    setSelectedNotifications(prev => 
+      prev.includes(id)
+        ? prev.filter(itemId => itemId !== id)
+        : [...prev, id]
+    );
   };
+  
+  // Count notifications by type
+  const getNotificationCountByType = (type: string) => {
+    return notifications.filter(n => n.type === type).length;
+  };
+  
+  // Count unread notifications
+  const unreadCount = notifications.filter(n => !n.read).length;
+  
+  // Get notification counts
+  const messageCounts = getNotificationCountByType('message');
+  const projectCounts = getNotificationCountByType('project');
+  const invoiceCounts = getNotificationCountByType('invoice');
+  const systemCounts = getNotificationCountByType('system');
   
   return (
-    <PageTransition className="container py-6 max-w-7xl">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
-          <p className="text-muted-foreground">
-            Stay updated with your projects, messages, and more
-          </p>
-        </div>
-        <Button variant="outline" onClick={handleMarkAllAsRead}>
-          Mark all as read
-        </Button>
-      </div>
-      
-      <Card>
-        <Tabs 
-          defaultValue="all" 
-          value={activeTab} 
-          onValueChange={setActiveTab} 
-          className="w-full"
-        >
-          <div className="flex justify-between items-center border-b p-4">
-            <TabsList>
-              {notificationTypes.map((type) => (
-                <TabsTrigger key={type.value} value={type.value}>
-                  {type.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
+    <PageTransition>
+      <div className="container py-8">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">Notifications</h1>
           
-          <TabsContent value={activeTab} className="m-0">
-            <ScrollArea className="h-[calc(100vh-240px)]">
-              {loading ? (
-                <div className="flex justify-center p-8">
-                  <p>Loading notifications...</p>
-                </div>
-              ) : Object.keys(groupedNotifications).length > 0 ? (
-                <div className="divide-y" key={refreshKey}>
-                  {Object.entries(groupedNotifications).map(([date, notifications]) => (
-                    <div key={date}>
-                      <div className="p-3 bg-muted/50">
-                        <p className="text-sm font-medium">
-                          {format(new Date(date), "EEEE, MMMM d, yyyy")}
-                        </p>
-                      </div>
-                      <div className="divide-y">
-                        {notifications.map((notification) => (
-                          <NotificationItem 
-                            key={notification.id} 
-                            notification={notification}
-                            onRead={handleNotificationRead}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={toggleSelectMode}
+            >
+              {isSelectMode ? 'Cancel' : 'Select'}
+            </Button>
+            
+            {isSelectMode && selectedNotifications.length > 0 && (
+              <>
+                <Button 
+                  variant="default" 
+                  size="icon"
+                  onClick={markAsRead}
+                  title="Mark as read"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                
+                <Button 
+                  variant="destructive" 
+                  size="icon"
+                  onClick={deleteSelected}
+                  title="Delete selected"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+        
+        {/* Notification filters */}
+        <div className="mb-6">
+          <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
+            <TabsList className="w-full max-w-md">
+              <TabsTrigger value="all" className="flex-1">
+                All
+                <Badge variant="outline" className="ml-2">{notifications.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="unread" className="flex-1">
+                Unread
+                <Badge variant="outline" className="ml-2">{unreadCount}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="message" className="flex-1">
+                Messages
+                <Badge variant="outline" className="ml-2">{messageCounts}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="project" className="flex-1">
+                Projects
+                <Badge variant="outline" className="ml-2">{projectCounts}</Badge>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all">
+              {filteredNotifications && filteredNotifications.length > 0 ? (
+                <NotificationList 
+                  notifications={filteredNotifications}
+                  isSelectMode={isSelectMode}
+                  selectedIds={selectedNotifications}
+                  onNotificationClick={handleNotificationClick}
+                  onToggleSelect={toggleNotificationSelection}
+                />
               ) : (
-                <div className="flex flex-col items-center justify-center py-16">
-                  <p className="text-muted-foreground mb-2">No notifications found</p>
-                  {activeTab !== 'all' && (
-                    <Button variant="outline" onClick={() => setActiveTab('all')}>
-                      View all notifications
-                    </Button>
-                  )}
-                </div>
+                <EmptyState type="all" />
               )}
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
-      </Card>
+            </TabsContent>
+            
+            <TabsContent value="unread">
+              {filteredNotifications && filteredNotifications.length > 0 ? (
+                <NotificationList 
+                  notifications={filteredNotifications}
+                  isSelectMode={isSelectMode}
+                  selectedIds={selectedNotifications}
+                  onNotificationClick={handleNotificationClick}
+                  onToggleSelect={toggleNotificationSelection}
+                />
+              ) : (
+                <EmptyState type="unread" />
+              )}
+            </TabsContent>
+            
+            <TabsContent value="message">
+              {filteredNotifications && filteredNotifications.length > 0 ? (
+                <NotificationList 
+                  notifications={filteredNotifications}
+                  isSelectMode={isSelectMode}
+                  selectedIds={selectedNotifications}
+                  onNotificationClick={handleNotificationClick}
+                  onToggleSelect={toggleNotificationSelection}
+                />
+              ) : (
+                <EmptyState type="message" />
+              )}
+            </TabsContent>
+            
+            <TabsContent value="project">
+              {filteredNotifications && filteredNotifications.length > 0 ? (
+                <NotificationList 
+                  notifications={filteredNotifications}
+                  isSelectMode={isSelectMode}
+                  selectedIds={selectedNotifications}
+                  onNotificationClick={handleNotificationClick}
+                  onToggleSelect={toggleNotificationSelection}
+                />
+              ) : (
+                <EmptyState type="project" />
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </PageTransition>
+  );
+};
+
+// Empty state component
+const EmptyState = ({ type }: { type: string }) => {
+  let message = "";
+  
+  switch (type) {
+    case "all":
+      message = "You don't have any notifications yet.";
+      break;
+    case "unread":
+      message = "You don't have any unread notifications.";
+      break;
+    case "message":
+      message = "You don't have any message notifications.";
+      break;
+    case "project":
+      message = "You don't have any project notifications.";
+      break;
+    default:
+      message = "No notifications to display.";
+  }
+  
+  return (
+    <Card className="bg-muted border-dashed">
+      <CardContent className="flex flex-col items-center justify-center py-12">
+        <BellIcon className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium mb-2">No Notifications</h3>
+        <p className="text-muted-foreground text-center">{message}</p>
+      </CardContent>
+    </Card>
   );
 };
 

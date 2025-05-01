@@ -1,183 +1,179 @@
 
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { PlusCircle, ArrowRight, DollarSign } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { CalendarIcon, ArrowUpRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import PageTransition from '@/components/layout/PageTransition';
-import ProjectCard from '@/components/dashboard/ProjectCard';
-import InvoiceSummary from '@/components/dashboard/InvoiceSummary';
-import ClientServiceAnalytics from '@/components/dashboard/ClientServiceAnalytics';
-import NotificationList from '@/components/notifications/NotificationList';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { 
-  getProjectsByClient, 
-  getUnreadMessageCount, 
-  getMessagesByUser, 
-  Project, 
-  services,
-  getInvoicesByClient,
-  getTotalPaidByClient 
-} from '@/data/mockData';
-import { getUnreadNotificationCount } from '@/data/notificationData';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { ProjectCard } from '@/components/dashboard/ProjectCard';
+import { ServiceRecommendation } from '@/components/dashboard/ServiceRecommendation';
+import { ClientServiceAnalytics } from '@/components/dashboard/ClientServiceAnalytics';
+import { getClientProjects } from '@/data/mockData';
 
 const ClientDashboard = () => {
   const { user } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [unreadMessages, setUnreadMessages] = useState(0);
-  const [totalPaid, setTotalPaid] = useState(0);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   
-  useEffect(() => {
-    if (user) {
-      const userProjects = getProjectsByClient(user.id);
-      setProjects(userProjects);
-      setUnreadMessages(getUnreadMessageCount(user.id));
-      setUnreadNotifications(getUnreadNotificationCount(user.id));
-      setTotalPaid(getTotalPaidByClient(user.id));
-    }
-  }, [user]);
-
-  if (!user) return null;
-
-  const recentInvoices = getInvoicesByClient(user.id).slice(0, 3);
+  // This would come from API in a real app
+  const projects = getClientProjects(user?.id || '');
+  const hasActiveProjects = projects.length > 0;
+  
+  const activeProjects = projects.filter(p => p.status === 'in_progress');
+  const completedProjects = projects.filter(p => p.status === 'completed');
+  
+  // Calculate upcoming deadlines
+  const now = new Date();
+  const upcomingDeadlines = activeProjects
+    .filter(p => {
+      const deadline = new Date(p.endDate);
+      const diffTime = Math.abs(deadline.getTime() - now.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+      return diffDays <= 14; // Show deadlines within next 14 days
+    })
+    .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime());
   
   return (
-    <PageTransition className="container py-6 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Client Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back, {user.name}. Here's an overview of your marketing projects.
-        </p>
-      </div>
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-            <CardDescription>Current marketing initiatives</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{projects.length}</div>
-          </CardContent>
-          <CardFooter>
-            <Link to="/services" className="text-xs text-muted-foreground hover:underline">
-              View all services
-            </Link>
-          </CardFooter>
-        </Card>
+    <PageTransition>
+      <div className="container max-w-7xl mx-auto py-8">
+        {/* Welcome header */}
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">
+            Welcome, {user?.profile?.name || 'Client'}
+          </h1>
+          <p className="text-muted-foreground">
+            Here's an overview of your projects and services
+          </p>
+        </header>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Messages</CardTitle>
-            <CardDescription>Communication with your team</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{unreadMessages} unread</div>
-          </CardContent>
-          <CardFooter>
-            <Link to="/messages" className="text-xs text-muted-foreground hover:underline">
-              View messages
-            </Link>
-          </CardFooter>
-        </Card>
+        {/* Stats cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Projects</p>
+                  <h3 className="text-3xl font-bold">{activeProjects.length}</h3>
+                </div>
+                <Badge variant="success">{activeProjects.length > 0 ? 'In Progress' : 'None'}</Badge>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-muted-foreground">Completed Projects</p>
+                  <h3 className="text-3xl font-bold">{completedProjects.length}</h3>
+                </div>
+                <Badge>{completedProjects.length > 0 ? 'Done' : 'None'}</Badge>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-muted-foreground">Services Used</p>
+                  <h3 className="text-3xl font-bold">{projects.reduce((acc, project) => acc + project.services.length, 0)}</h3>
+                </div>
+                <Badge variant="outline">Total</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-            <CardDescription>Updates and alerts</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{unreadNotifications} new</div>
-          </CardContent>
-          <CardFooter>
-            <Link to="/notifications" className="text-xs text-muted-foreground hover:underline">
-              View notifications
-            </Link>
-          </CardFooter>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-            <CardDescription>Lifetime campaign investment</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <DollarSign className="h-5 w-5 mr-2 text-green-500" />
-              <div className="text-2xl font-bold">${totalPaid.toFixed(2)}</div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Link to="/invoices" className="text-xs text-muted-foreground hover:underline">
-              View all invoices
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
-      
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
-        <div className="space-y-6 md:col-span-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold tracking-tight">Your Projects</h2>
-            <Button variant="outline" asChild>
-              <Link to="/services">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Request New Project
-              </Link>
-            </Button>
+        {/* Projects and Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <h2 className="text-2xl font-bold mb-4">Your Projects</h2>
+            
+            {hasActiveProjects ? (
+              <div className="grid gap-4">
+                {activeProjects.map(project => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+                
+                {activeProjects.length === 0 && completedProjects.length > 0 && (
+                  <div className="bg-muted p-6 rounded-lg text-center">
+                    <p className="text-muted-foreground">All your projects are completed.</p>
+                    <Button variant="outline" className="mt-2">Request New Project</Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-muted p-6 rounded-lg text-center">
+                <p className="text-muted-foreground mb-4">You don't have any projects yet.</p>
+                <Button variant="default">Request Your First Project</Button>
+              </div>
+            )}
+            
+            {/* Upcoming deadlines */}
+            {upcomingDeadlines.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold mb-4">Upcoming Deadlines</h3>
+                <div className="space-y-3">
+                  {upcomingDeadlines.map(project => {
+                    const deadline = new Date(project.endDate);
+                    const diffTime = Math.abs(deadline.getTime() - now.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    return (
+                      <div key={project.id} className="flex items-center justify-between border-b pb-2">
+                        <div className="flex items-center">
+                          <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
+                          <span>{project.name}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className={`mr-2 ${diffDays <= 3 ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
+                            {diffDays} days left
+                          </span>
+                          <Button variant="ghost" size="icon">
+                            <ArrowUpRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           
-          {projects.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2">
-              {projects.map(project => (
-                <ProjectCard 
-                  key={project.id} 
-                  project={project} 
-                />
-              ))}
-              
-              <Card className="flex flex-col items-center justify-center p-6 border-dashed">
-                <div className="text-center mb-4">
-                  <h3 className="font-medium mb-1">Need another service?</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Explore our marketing services
-                  </p>
-                </div>
-                <Button asChild>
-                  <Link to="/services">
-                    Browse Services
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </Card>
-            </div>
-          ) : (
-            <Card className="flex flex-col items-center justify-center p-8 border-dashed">
-              <div className="text-center mb-6">
-                <h3 className="text-lg font-medium mb-2">No active projects yet</h3>
-                <p className="text-muted-foreground">
-                  Explore our services and request your first marketing project
-                </p>
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Service Analytics</h2>
+            {hasActiveProjects ? (
+              <ClientServiceAnalytics userId={user?.id || ''} />
+            ) : (
+              <div className="bg-muted p-6 rounded-lg">
+                <h3 className="font-medium mb-2">Recommended Services</h3>
+                <ServiceRecommendation />
               </div>
-              <Button asChild size="lg">
-                <Link to="/services">
-                  Explore Services
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </Card>
-          )}
+            )}
+          </div>
         </div>
         
-        <div className="space-y-6">
-          <InvoiceSummary recentInvoices={recentInvoices} clientId={user.id} />
-          <NotificationList />
-        </div>
-      </div>
-      
-      <div className="mb-6">
-        <ClientServiceAnalytics />
+        {/* Onboarding dialog - would typically be shown only once */}
+        <Dialog open={showOnboarding && !hasActiveProjects} onOpenChange={setShowOnboarding}>
+          <DialogContent>
+            <DialogTitle>Welcome to LeadsRush Africa!</DialogTitle>
+            <DialogDescription>
+              We're excited to have you on board. Let's get started by setting up your first project.
+            </DialogDescription>
+            <DialogFooter>
+              <Button onClick={() => setShowOnboarding(false)}>Get Started</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </PageTransition>
   );

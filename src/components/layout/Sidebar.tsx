@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BarChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
@@ -57,8 +56,12 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
               className="flex items-center gap-2 font-semibold"
               onClick={closeSidebarOnMobile}
             >
-              <BarChart className="h-5 w-5 text-primary" />
-              <span>LeadsRush</span>
+              <img 
+                src="/lovable-uploads/4ca15042-e89a-4f8f-8662-4075c5cbe7ca.png" 
+                alt="LeadsRush Africa" 
+                className="h-8 w-8"
+              />
+              <span>LeadsRush Africa</span>
             </Link>
           </div>
           

@@ -43,7 +43,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="text-xl font-semibold">
-            My LeadsRush
+            LeadsRush Africa
           </div>
         </div>
         
@@ -57,7 +57,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             >
               <Mail className="h-5 w-5" />
               {unreadMessages > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {unreadMessages}
                 </span>
               )}
@@ -71,7 +71,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                   {user.profile?.avatar ? (
                     <img 
                       src={user.profile.avatar} 
-                      alt={user.profile.name} 
+                      alt={user.profile?.name || 'User'} 
                       className="h-8 w-8 rounded-full"
                     />
                   ) : (
@@ -81,7 +81,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{user.profile?.name}</p>
+                  <p className="text-sm font-medium">{user.profile?.name || 'User'}</p>
                   <p className="text-xs text-muted-foreground">{user.profile?.email}</p>
                 </div>
                 <DropdownMenuItem onClick={handleLogout}>
