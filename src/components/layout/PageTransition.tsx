@@ -8,10 +8,7 @@ interface PageTransitionProps {
   className?: string;
 }
 
-const PageTransition: React.FC<PageTransitionProps> = ({ 
-  children,
-  className = ""
-}) => {
+const PageTransition = ({ children, className = "" }: PageTransitionProps) => {
   return (
     <motion.div
       initial="hidden"

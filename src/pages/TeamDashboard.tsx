@@ -204,19 +204,19 @@ const TeamDashboard = () => {
                     <TabsTrigger value="revenue">Revenue</TabsTrigger>
                     <TabsTrigger value="clients">Client Adoption</TabsTrigger>
                   </TabsList>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <TabsContent value="overview">
-                    <ServiceOverviewTab sortedByUsage={sortedServices} />
-                  </TabsContent>
-                  <TabsContent value="revenue">
-                    <ServiceRevenueTab sortedByUsage={sortedServices} />
-                  </TabsContent>
-                  <TabsContent value="clients">
-                    <ClientAdoptionTab clientAdoptionData={clientAdoptionData} />
-                  </TabsContent>
-                </CardContent>
+                </Tabs>
               </CardHeader>
+              <CardContent className="pt-0">
+                <TabsContent value="overview">
+                  <ServiceOverviewTab sortedByUsage={sortedServices} />
+                </TabsContent>
+                <TabsContent value="revenue">
+                  <ServiceRevenueTab sortedByUsage={sortedServices} />
+                </TabsContent>
+                <TabsContent value="clients">
+                  <ClientAdoptionTab clientAdoptionData={clientAdoptionData} />
+                </TabsContent>
+              </CardContent>
             </Card>
           </div>
         )}
