@@ -1,12 +1,19 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
 import PageTransition from '@/components/layout/PageTransition';
 import AdminServiceAnalytics from '@/components/dashboard/AdminServiceAnalytics';
 import InvoiceSummary from '@/components/dashboard/InvoiceSummary';
+import { getServicesByUsage, getRecentInvoices, getProjects } from '@/data/mockData';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  
+  // Get data that would normally come from an API
+  const clients = []; // Simplified, would come from API
+  const projects = getProjects();
+  const recentInvoices = getRecentInvoices();
 
   return (
     <PageTransition>
@@ -79,8 +86,8 @@ const AdminDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <AdminServiceAnalytics />
-          <InvoiceSummary />
+          <AdminServiceAnalytics clients={clients} projects={projects} />
+          <InvoiceSummary recentInvoices={recentInvoices} clientId={null} />
         </div>
       </div>
     </PageTransition>

@@ -25,48 +25,56 @@ import ServiceRevenueTab from '@/components/dashboard/analytics/ServiceRevenueTa
 import ClientAdoptionTab from '@/components/dashboard/analytics/ClientAdoptionTab';
 
 // Import mock data
-import { projects } from '@/data/mockData';
+import { 
+  getTeamProjects, 
+  getServicesByUsage,
+  getClientAdoptionData,
+  getProjectStatusData
+} from '@/data/mockData';
+
+// Define proper type for the enhanced service data
+interface EnhancedServiceData {
+  name: string;
+  id: string;
+  icon: string;
+  count: number;
+  clients: number;
+  revenue: number;
+}
+
+// Define proper type for client adoption data
+interface ClientAdoptionData {
+  name: string;
+  services: number;
+  potential: number;
+}
 
 const TeamDashboard = () => {
   const { user, hasRole } = useAuth();
   const [selectedTab, setSelectedTab] = useState("overview");
   
   // Get data that would come from API in real app
-  const teamProjects = projects.filter(project => 
-    project.teamMemberIds.includes(user?.id || '') || 
-    project.projectManagerId === (user?.id || '')
-  );
+  const projects = getTeamProjects(user?.id || '');
+  const projectsByStatus = getProjectStatusData();
   
-  // This would be calculated from actual data in a production app
-  const projectsByStatus = [
-    { name: 'Planning', value: teamProjects.filter(p => p.status === 'planning').length },
-    { name: 'In Progress', value: teamProjects.filter(p => p.status === 'in_progress').length },
-    { name: 'Review', value: teamProjects.filter(p => p.status === 'review').length },
-    { name: 'Completed', value: teamProjects.filter(p => p.status === 'completed').length },
-  ];
-  
-  // Mock data for services usage
-  const sortedServices = projects
-    .flatMap(p => p.serviceIds)
-    .reduce((acc, serviceId) => {
-      const existing = acc.find(s => s.id === serviceId);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        acc.push({ id: serviceId, count: 1 });
-      }
-      return acc;
-    }, [] as { id: string; count: number }[])
-    .sort((a, b) => b.count - a.count);
-    
-  // Mock data for client adoption
-  const clientAdoptionData = [
-    { name: 'SEO', new: 4, existing: 8 },
-    { name: 'PPC', new: 6, existing: 10 },
-    { name: 'Content', new: 3, existing: 7 },
-    { name: 'Social', new: 5, existing: 4 },
-    { name: 'Analytics', new: 2, existing: 5 },
-  ];
+  // Convert service data to the right format
+  const rawServices = getServicesByUsage();
+  const sortedServices: EnhancedServiceData[] = rawServices.map(service => ({
+    name: service.name || `Service ${service.id}`,
+    id: service.id,
+    icon: service.icon || 'bar-chart',
+    count: service.count,
+    clients: service.clients || Math.floor(service.count * 0.7),
+    revenue: service.revenue || service.count * 1000
+  }));
+
+  // Convert client adoption data to the right format
+  const rawClientData = getClientAdoptionData();
+  const clientAdoptionData: ClientAdoptionData[] = rawClientData.map(client => ({
+    name: client.name,
+    services: client.new || 0,
+    potential: client.existing || 0
+  }));
   
   return (
     <PageTransition>
@@ -90,9 +98,9 @@ const TeamDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{teamProjects.length}</div>
+              <div className="text-3xl font-bold">{projects.length}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {teamProjects.filter(p => p.status === 'in_progress').length} active
+                {projects.filter(p => p.status === 'in_progress').length} active
               </p>
             </CardContent>
           </Card>
@@ -105,10 +113,10 @@ const TeamDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {teamProjects.filter(p => p.status === 'completed').length}
+                {projects.filter(p => p.status === 'completed').length}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {Math.round((teamProjects.filter(p => p.status === 'completed').length / teamProjects.length) * 100) || 0}% completion rate
+                {Math.round((projects.filter(p => p.status === 'completed').length / projects.length) * 100)}% completion rate
               </p>
             </CardContent>
           </Card>
@@ -121,10 +129,10 @@ const TeamDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {new Set(teamProjects.map(p => p.clientId)).size}
+                {new Set(projects.map(p => p.clientId)).size}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {teamProjects.filter(p => new Date(p.startDate) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length} new in last 30 days
+                {projects.filter(p => new Date(p.startDate) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length} new in last 30 days
               </p>
             </CardContent>
           </Card>
@@ -232,7 +240,7 @@ const TeamDashboard = () => {
                   </TabsList>
                 </Tabs>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="pt-6">
                 <TabsContent value="overview">
                   <ServiceOverviewTab sortedByUsage={sortedServices} />
                 </TabsContent>

@@ -49,7 +49,7 @@ const ServiceRevenueTab: React.FC<ServiceRevenueTabProps> = ({ sortedByUsage }) 
             />
             <Bar 
               dataKey="revenue" 
-              fill="#10b981"
+              fill="#ef4444"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

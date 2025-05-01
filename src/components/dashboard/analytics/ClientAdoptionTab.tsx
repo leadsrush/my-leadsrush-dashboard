@@ -13,7 +13,7 @@ interface ClientAdoptionTabProps {
 
 const ClientAdoptionTab: React.FC<ClientAdoptionTabProps> = ({ clientAdoptionData }) => {
   const config = {
-    services: { theme: { light: '#0ea5e9', dark: '#0ea5e9' } },
+    services: { theme: { light: '#ef4444', dark: '#ef4444' } },
     potential: { theme: { light: '#e2e8f0', dark: '#1e293b' } },
   };
 
@@ -41,7 +41,7 @@ const ClientAdoptionTab: React.FC<ClientAdoptionTabProps> = ({ clientAdoptionDat
             <Bar 
               dataKey="services" 
               stackId="a" 
-              fill="#0ea5e9" 
+              fill="#ef4444" 
               name="Active Services" 
             />
             <Bar 
