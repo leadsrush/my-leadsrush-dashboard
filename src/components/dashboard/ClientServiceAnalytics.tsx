@@ -7,7 +7,11 @@ import { services } from '@/data/mockData';
 // Import Lucide icons directly
 import { Search, MousePointerClick, FileText, Share2, BarChart } from "lucide-react";
 
-const ClientServiceAnalytics = () => {
+interface ClientServiceAnalyticsProps {
+  userId: string;
+}
+
+const ClientServiceAnalytics = ({ userId }: ClientServiceAnalyticsProps) => {
   const [activeTab, setActiveTab] = useState("what-others-use");
   
   // This would be real data in a production app

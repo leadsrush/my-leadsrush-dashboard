@@ -1,5 +1,5 @@
-
-import React, { useState } from 'react';
+import React from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Download,
@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { StatusBadge } from '@/components/ui/StatusBadge';
+import StatusBadge from '@/components/ui/StatusBadge';
 import { Calendar } from '@/components/ui/calendar';
 import {
   DropdownMenu,
@@ -66,7 +66,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import PageTransition from '@/components/layout/PageTransition';
 import { useAuth } from '@/context/AuthContext';
-import { InvoiceList } from '@/components/invoices/InvoiceList';
+import InvoiceList from '@/components/invoices/InvoiceList';
 
 // Mock data for client invoices
 const clientInvoices = [

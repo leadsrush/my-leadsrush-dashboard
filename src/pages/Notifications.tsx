@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BellIcon, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { NotificationList } from '@/components/notifications/NotificationList';
 import PageTransition from '@/components/layout/PageTransition';
 import { useToast } from '@/hooks/use-toast';
-import { getUserNotifications } from '@/data/notificationData';
+import { getNotifications } from '@/data/notificationData';
 import { Notification } from '@/types/notification';
 import { useAuth } from '@/context/AuthContext';
 
@@ -29,7 +29,7 @@ const Notifications = () => {
   useEffect(() => {
     if (user?.id) {
       // In real app, this would call an API
-      const fetchedNotifications = getUserNotifications(user.id);
+      const fetchedNotifications = getNotifications(user.id);
       if (fetchedNotifications) {
         setNotifications(fetchedNotifications);
       }

@@ -13,32 +13,32 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ProjectCard } from '@/components/dashboard/ProjectCard';
-import { ServiceRecommendation } from '@/components/dashboard/ServiceRecommendation';
-import { ClientServiceAnalytics } from '@/components/dashboard/ClientServiceAnalytics';
-import { getClientProjects } from '@/data/mockData';
+import ProjectCard from '@/components/dashboard/ProjectCard';
+import ServiceRecommendation from '@/components/dashboard/ServiceRecommendation';
+import ClientServiceAnalytics from '@/components/dashboard/ClientServiceAnalytics';
+import { projects } from '@/data/mockData';
 
 const ClientDashboard = () => {
   const { user } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(true);
   
   // This would come from API in a real app
-  const projects = getClientProjects(user?.id || '');
-  const hasActiveProjects = projects.length > 0;
+  const clientProjects = projects.filter(project => project.clientId === (user?.id || ''));
+  const hasActiveProjects = clientProjects.length > 0;
   
-  const activeProjects = projects.filter(p => p.status === 'in_progress');
-  const completedProjects = projects.filter(p => p.status === 'completed');
+  const activeProjects = clientProjects.filter(p => p.status === 'in_progress');
+  const completedProjects = clientProjects.filter(p => p.status === 'completed');
   
   // Calculate upcoming deadlines
   const now = new Date();
   const upcomingDeadlines = activeProjects
     .filter(p => {
-      const deadline = new Date(p.endDate);
+      const deadline = new Date(p.endDate || '');
       const diffTime = Math.abs(deadline.getTime() - now.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
       return diffDays <= 14; // Show deadlines within next 14 days
     })
-    .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime());
+    .sort((a, b) => new Date(a.endDate || '').getTime() - new Date(b.endDate || '').getTime());
   
   return (
     <PageTransition>
@@ -84,7 +84,7 @@ const ClientDashboard = () => {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-sm text-muted-foreground">Services Used</p>
-                  <h3 className="text-3xl font-bold">{projects.reduce((acc, project) => acc + project.services.length, 0)}</h3>
+                  <h3 className="text-3xl font-bold">{clientProjects.reduce((acc, project) => acc + project.serviceIds.length, 0)}</h3>
                 </div>
                 <Badge variant="outline">Total</Badge>
               </div>
@@ -123,7 +123,7 @@ const ClientDashboard = () => {
                 <h3 className="text-xl font-semibold mb-4">Upcoming Deadlines</h3>
                 <div className="space-y-3">
                   {upcomingDeadlines.map(project => {
-                    const deadline = new Date(project.endDate);
+                    const deadline = new Date(project.endDate || '');
                     const diffTime = Math.abs(deadline.getTime() - now.getTime());
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     
