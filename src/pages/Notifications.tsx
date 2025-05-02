@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/context/AuthContext';
 import PageTransition from '@/components/layout/PageTransition';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,8 +41,19 @@ const Notifications = () => {
           console.error('Error fetching notifications:', error);
           // Fall back to mock data in case of error
           setNotifications(mockNotifications);
-        } else {
-          setNotifications(data as Notification[]);
+        } else if (data) {
+          // Transform the data to match the Notification interface
+          const transformedData = data.map((item: any): Notification => ({
+            id: item.id,
+            userId: item.userid,
+            read: item.read,
+            createdAt: item.createdat,
+            type: item.type as any,
+            title: item.title,
+            content: item.content,
+            link: item.link
+          }));
+          setNotifications(transformedData);
         }
       } catch (error) {
         console.error('Exception fetching notifications:', error);

@@ -24,6 +24,7 @@ const Auth = () => {
   useEffect(() => {
     // If user is already authenticated, redirect based on role
     if (isAuthenticated && userProfile) {
+      console.log("User is authenticated with role:", userProfile.role);
       if (userProfile.role === 'admin') {
         navigate('/admin-dashboard');
       } else if (userProfile.role === 'client') {
@@ -49,6 +50,7 @@ const Auth = () => {
     }
 
     try {
+      console.log("Attempting login with:", email);
       const { error } = await signIn(email, password);
       
       if (error) {
@@ -101,6 +103,7 @@ const Auth = () => {
     }
 
     try {
+      console.log("Attempting signup with:", email);
       const { error } = await signUp(email, password, {
         name,
         role: 'client', // Default role for self-registration is client

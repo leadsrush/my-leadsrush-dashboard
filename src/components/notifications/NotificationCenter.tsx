@@ -29,11 +29,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   
   if (!user) return null;
   
-  const notifications = getNotificationsByUser(user.id);
-  const unreadCount = getUnreadNotificationCount(user.id);
+  // Using mock data but using the user's id for filtering
+  const userId = user.id;
+  const notifications = getNotificationsByUser(userId);
+  const unreadCount = getUnreadNotificationCount(userId);
   
   const handleMarkAllAsRead = () => {
-    markAllNotificationsAsRead(user.id);
+    markAllNotificationsAsRead(userId);
     setRefreshKey(prev => prev + 1);
   };
   

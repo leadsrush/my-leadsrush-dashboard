@@ -1,6 +1,7 @@
 
 import { Notification } from '@/types/notification';
 
+// Mock notifications data
 export const mockNotifications: Notification[] = [
   {
     id: '1',
@@ -53,3 +54,31 @@ export const mockNotifications: Notification[] = [
     link: '/settings'
   }
 ];
+
+// Get notifications for a specific user
+export const getNotificationsByUser = (userId: string): Notification[] => {
+  return mockNotifications.filter(notification => notification.userId === userId)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+};
+
+// Get count of unread notifications
+export const getUnreadNotificationCount = (userId: string): number => {
+  return mockNotifications.filter(notification => notification.userId === userId && !notification.read).length;
+};
+
+// Mark all notifications as read
+export const markAllNotificationsAsRead = (userId: string): void => {
+  mockNotifications.forEach(notification => {
+    if (notification.userId === userId) {
+      notification.read = true;
+    }
+  });
+};
+
+// Mark a single notification as read
+export const markNotificationAsRead = (id: string): void => {
+  const notification = mockNotifications.find(n => n.id === id);
+  if (notification) {
+    notification.read = true;
+  }
+};
