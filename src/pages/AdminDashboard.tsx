@@ -5,15 +5,24 @@ import { useAuth } from '@/context/AuthContext';
 import PageTransition from '@/components/layout/PageTransition';
 import AdminServiceAnalytics from '@/components/dashboard/AdminServiceAnalytics';
 import InvoiceSummary from '@/components/dashboard/InvoiceSummary';
-import { getServicesByUsage, getRecentInvoices, getProjects } from '@/data/mockData';
+import { services, projects } from '@/data/mockData';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   
   // Get data that would normally come from an API
   const clients = []; // Simplified, would come from API
-  const projects = getProjects();
-  const recentInvoices = getRecentInvoices();
+  
+  // Generate mock recent invoices
+  const recentInvoices = projects.slice(0, 5).map(project => ({
+    id: `INV-${project.id.substring(0, 6)}`,
+    clientId: project.clientId,
+    clientName: `Client ${project.clientId.substring(0, 3)}`,
+    amount: Math.floor(Math.random() * 5000) + 1000,
+    status: ['paid', 'pending', 'overdue'][Math.floor(Math.random() * 3)],
+    date: new Date().toISOString(),
+    dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+  }));
 
   return (
     <PageTransition>

@@ -18,6 +18,13 @@ import ServiceRecommendation from '@/components/dashboard/ServiceRecommendation'
 import ClientServiceAnalytics from '@/components/dashboard/ClientServiceAnalytics';
 import { projects } from '@/data/mockData';
 
+// Mock clients data for ServiceRecommendation
+const mockClients = [
+  { id: "client1", name: "Acme Corp" },
+  { id: "client2", name: "TechStart Inc" },
+  { id: "client3", name: "Global Services Ltd" }
+];
+
 const ClientDashboard = () => {
   const { user } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -156,7 +163,7 @@ const ClientDashboard = () => {
             ) : (
               <div className="bg-muted p-6 rounded-lg">
                 <h3 className="font-medium mb-2">Recommended Services</h3>
-                <ServiceRecommendation />
+                <ServiceRecommendation clients={mockClients} />
               </div>
             )}
           </div>
