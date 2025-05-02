@@ -1,106 +1,138 @@
 
-import React from 'react';
-import { Bell } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import PageTransition from '@/components/layout/PageTransition';
-import { useToast } from '@/hooks/use-toast';
-import NotificationList from '@/components/notifications/NotificationList';
-import { notifications } from '@/data/notificationData';
-import { Notification } from '@/types/notification';
+import React, { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
+import PageTransition from '@/components/layout/PageTransition';
+import { supabase } from '@/integrations/supabase/client';
+import { Notification } from '@/types/notification';
+import NotificationList from '@/components/notifications/NotificationList';
 
-const NotificationsPage = () => {
+// Import mock notification data if needed
+import { mockNotifications } from '@/data/notificationData';
+
+const Notifications = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
-  // In a real app, we would fetch notifications from an API
-  const userNotifications = notifications;
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Filter notifications by type
-  const filterByType = (type: string): Notification[] => {
-    return userNotifications.filter(notification => notification.type === type);
-  };
+  // Filter notifications
+  const unreadNotifications = notifications.filter(n => !n.read);
+  const messageNotifications = notifications.filter(n => n.type === 'message');
+  const projectNotifications = notifications.filter(n => n.type === 'project');
+  const systemNotifications = notifications.filter(n => n.type === 'system');
   
-  const unreadCount = userNotifications.filter(n => !n.read).length;
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!user?.id) {
+        // Use mock data if not authenticated
+        setNotifications(mockNotifications);
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('userid', user.id)
+          .order('createdat', { ascending: false });
+          
+        if (error) {
+          console.error('Error fetching notifications:', error);
+          // Fall back to mock data in case of error
+          setNotifications(mockNotifications);
+        } else {
+          setNotifications(data as Notification[]);
+        }
+      } catch (error) {
+        console.error('Exception fetching notifications:', error);
+        setNotifications(mockNotifications);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchNotifications();
+  }, [user]);
   
-  const handleMarkAllRead = () => {
-    // In a real app, this would call an API to mark notifications as read
-    toast({
-      title: "All notifications marked as read",
-      description: `${unreadCount} notifications have been marked as read.`
-    });
+  const handleReadNotification = async (id: string) => {
+    // Update locally first for UI responsiveness
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    );
+    
+    // Update in database if user is logged in
+    if (user?.id) {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id);
+        
+      if (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    }
   };
   
   return (
     <PageTransition>
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Notifications</h1>
-            <p className="text-muted-foreground">Stay updated with important events and updates</p>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            {unreadCount > 0 && (
-              <Button 
-                variant="outline" 
-                onClick={handleMarkAllRead}
-              >
-                Mark all as read
-              </Button>
-            )}
-            
-            <Button variant="outline" size="icon">
-              <Bell className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+      <div className="container max-w-5xl mx-auto py-8">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">
+            Notifications
+          </h1>
+          <p className="text-muted-foreground">
+            Stay updated with all your activities.
+          </p>
+        </header>
         
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Recent Notifications</CardTitle>
-              {unreadCount > 0 && (
-                <Badge variant="default">{unreadCount} Unread</Badge>
-              )}
-            </div>
-            <CardDescription>You have {userNotifications.length} notifications</CardDescription>
-          </CardHeader>
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="all">All ({notifications.length})</TabsTrigger>
+            <TabsTrigger value="unread">Unread ({unreadNotifications.length})</TabsTrigger>
+            <TabsTrigger value="messages">Messages ({messageNotifications.length})</TabsTrigger>
+            <TabsTrigger value="projects">Projects ({projectNotifications.length})</TabsTrigger>
+            <TabsTrigger value="system">System ({systemNotifications.length})</TabsTrigger>
+          </TabsList>
           
-          <Tabs defaultValue="all">
-            <CardContent className="pb-0">
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="system">System</TabsTrigger>
-                <TabsTrigger value="project">Projects</TabsTrigger>
-                <TabsTrigger value="message">Messages</TabsTrigger>
-              </TabsList>
-            </CardContent>
-            
-            <Separator />
-            
-            <CardContent>
-              <TabsContent value="all">
-                <NotificationList notifications={userNotifications} />
-              </TabsContent>
-              <TabsContent value="system">
-                <NotificationList notifications={filterByType('system')} />
-              </TabsContent>
-              <TabsContent value="project">
-                <NotificationList notifications={filterByType('project')} />
-              </TabsContent>
-              <TabsContent value="message">
-                <NotificationList notifications={filterByType('message')} />
-              </TabsContent>
-            </CardContent>
-          </Tabs>
-        </Card>
+          <TabsContent value="all">
+            <NotificationList 
+              notifications={notifications} 
+              onRead={handleReadNotification} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="unread">
+            <NotificationList 
+              notifications={unreadNotifications} 
+              onRead={handleReadNotification} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="messages">
+            <NotificationList 
+              notifications={messageNotifications} 
+              onRead={handleReadNotification} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="projects">
+            <NotificationList 
+              notifications={projectNotifications} 
+              onRead={handleReadNotification} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="system">
+            <NotificationList 
+              notifications={systemNotifications} 
+              onRead={handleReadNotification} 
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </PageTransition>
   );
 };
 
-export default NotificationsPage;
+export default Notifications;

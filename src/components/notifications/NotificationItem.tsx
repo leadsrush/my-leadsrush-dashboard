@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Bell, Mail, FileText, Users, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Notification, NotificationType } from '@/types/notification';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface NotificationItemProps {
   notification: Notification;

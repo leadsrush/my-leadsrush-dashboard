@@ -16,10 +16,10 @@ interface Invoice {
   status: string;
   date: string;
   dueDate: string;
-  number?: string; // Make optional
-  issueDate?: string; // Make optional
-  items?: any[]; // Make optional
-  total?: number; // Make optional
+  number: string; // Make required to match the imported type
+  issueDate: string; // Make required to match the imported type
+  items: any[]; // Make required to match the imported type
+  total: number; // Make required to match the imported type
 }
 
 const AdminDashboard = () => {

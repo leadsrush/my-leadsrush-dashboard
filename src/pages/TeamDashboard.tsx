@@ -57,7 +57,7 @@ const TeamDashboard = () => {
     // Check if user is assigned to this project
     if (!user?.id) return false;
     
-    const isAssigned = project.userId === user.id;
+    const isAssigned = project.projectmanagerid === user.id;
     const isTeamMember = project.teamMemberIds?.includes(user.id) || false;
     
     return isAssigned || isTeamMember;
