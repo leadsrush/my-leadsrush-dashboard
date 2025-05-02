@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,14 +51,24 @@ const TeamDashboard = () => {
   const [selectedTab, setSelectedTab] = useState("overview");
   
   // Get data that would come from API in real app
-  const teamProjects = projects.filter(project => project.assignedTo === user?.id || project.teamMembers?.includes(user?.id || ''));
+  // Filter projects that belong to this team member
+  // Note: Using optional chaining and nullish coalescing to avoid errors
+  const teamProjects = projects.filter(project => {
+    // Check if user is assigned to this project
+    if (!user?.id) return false;
+    
+    const isAssigned = project.userId === user.id;
+    const isTeamMember = project.teamMemberIds?.includes(user.id) || false;
+    
+    return isAssigned || isTeamMember;
+  });
   
   // Generate project status data
   const projectsByStatus = [
     { name: 'In Progress', value: teamProjects.filter(p => p.status === 'in_progress').length },
     { name: 'Completed', value: teamProjects.filter(p => p.status === 'completed').length },
     { name: 'Planning', value: teamProjects.filter(p => p.status === 'planning').length },
-    { name: 'On Hold', value: teamProjects.filter(p => p.status === 'on_hold').length },
+    { name: 'On Hold', value: teamProjects.filter(p => p.status === 'on_hold' as any).length },
   ];
   
   // Convert service data to the right format

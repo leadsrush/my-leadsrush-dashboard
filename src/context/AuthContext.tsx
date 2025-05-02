@@ -53,6 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
+      
       if (event === 'SIGNED_IN' && session?.user) {
         try {
           // Get profile data
@@ -63,6 +65,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .single();
           
           if (profileData && !error) {
+            console.log("Profile data loaded:", profileData);
+            
             const extendedUser = {
               ...session.user,
               profile: profileData
@@ -72,10 +76,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserProfile(profileData);
             setIsAuthenticated(true);
           } else {
+            console.error('Profile data not found:', error);
             setUser(null);
             setUserProfile(null);
             setIsAuthenticated(false);
-            console.error('Profile data not found:', error);
           }
         } catch (error) {
           console.error('Error fetching user profile:', error);
@@ -84,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsAuthenticated(false);
         }
       } else if (event === 'SIGNED_OUT') {
+        console.log("User signed out");
         setUser(null);
         setUserProfile(null);
         setIsAuthenticated(false);
@@ -93,9 +98,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // THEN check for existing session
     const checkSession = async () => {
       try {
+        console.log("Checking for existing session");
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
+          console.log("Existing session found for user:", session.user.id);
+          
           // Get profile data
           const { data: profileData, error } = await supabase
             .from('profiles')
@@ -104,6 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .single();
           
           if (profileData && !error) {
+            console.log("Profile data loaded from existing session:", profileData);
+            
             const extendedUser = {
               ...session.user,
               profile: profileData
@@ -113,8 +123,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserProfile(profileData);
             setIsAuthenticated(true);
           } else {
-            console.error('Profile data not found:', error);
+            console.error('Profile data not found for existing session:', error);
           }
+        } else {
+          console.log("No existing session found");
         }
       } catch (error) {
         console.error('Error checking session:', error);
@@ -131,14 +143,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signInHandler = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    
-    return { data, error };
+    console.log("Attempting sign in for:", email);
+    const result = await supabase.auth.signInWithPassword({ email, password });
+    console.log("Sign in result:", result.data ? "Success" : "Failed", result.error);
+    return result;
   };
 
   const signUpHandler = async (email: string, password: string, userData: any) => {
-    const { data, error } = await supabase.auth.signUp({
+    console.log("Attempting sign up for:", email);
+    const result = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -146,10 +159,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     });
     
-    return { data, error };
+    console.log("Sign up result:", result.data ? "Success" : "Failed", result.error);
+    return result;
   };
 
   const signOutHandler = async () => {
+    console.log("Signing out");
     await supabase.auth.signOut();
   };
 

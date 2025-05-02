@@ -7,6 +7,21 @@ import AdminServiceAnalytics from '@/components/dashboard/AdminServiceAnalytics'
 import InvoiceSummary from '@/components/dashboard/InvoiceSummary';
 import { services, projects } from '@/data/mockData';
 
+// Define invoice type to match InvoiceSummary component's expectations
+interface Invoice {
+  id: string;
+  clientId: string;
+  clientName: string;
+  amount: number;
+  status: string;
+  date: string;
+  dueDate: string;
+  number?: string; // Make optional
+  issueDate?: string; // Make optional
+  items?: any[]; // Make optional
+  total?: number; // Make optional
+}
+
 const AdminDashboard = () => {
   const { user } = useAuth();
   
@@ -14,14 +29,18 @@ const AdminDashboard = () => {
   const clients = []; // Simplified, would come from API
   
   // Generate mock recent invoices
-  const recentInvoices = projects.slice(0, 5).map(project => ({
+  const recentInvoices: Invoice[] = projects.slice(0, 5).map(project => ({
     id: `INV-${project.id.substring(0, 6)}`,
     clientId: project.clientId,
     clientName: `Client ${project.clientId.substring(0, 3)}`,
     amount: Math.floor(Math.random() * 5000) + 1000,
     status: ['paid', 'pending', 'overdue'][Math.floor(Math.random() * 3)],
     date: new Date().toISOString(),
-    dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+    dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    number: `INV-${Math.floor(Math.random() * 1000)}`,
+    issueDate: new Date().toISOString(),
+    items: [],
+    total: Math.floor(Math.random() * 5000) + 1000
   }));
 
   return (

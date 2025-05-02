@@ -24,7 +24,9 @@ const Auth = () => {
   useEffect(() => {
     // If user is already authenticated, redirect based on role
     if (isAuthenticated && userProfile) {
-      if (userProfile.role === 'client') {
+      if (userProfile.role === 'admin') {
+        navigate('/admin-dashboard');
+      } else if (userProfile.role === 'client') {
         navigate('/client-dashboard');
       } else {
         navigate('/team-dashboard');
@@ -36,10 +38,21 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    if (!email || !password) {
+      toast({
+        title: "Missing information",
+        description: "Please enter both email and password",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { error } = await signIn(email, password);
       
       if (error) {
+        console.error("Login error:", error);
         toast({
           title: "Login failed",
           description: error.message,
@@ -52,6 +65,7 @@ const Auth = () => {
         });
       }
     } catch (error: any) {
+      console.error("Login exception:", error);
       toast({
         title: "Login failed",
         description: error.message || "An error occurred during login",
@@ -93,6 +107,7 @@ const Auth = () => {
       });
       
       if (error) {
+        console.error("Signup error:", error);
         toast({
           title: "Sign up failed",
           description: error.message,
@@ -106,6 +121,7 @@ const Auth = () => {
         setActiveTab('login');
       }
     } catch (error: any) {
+      console.error("Signup exception:", error);
       toast({
         title: "Sign up failed",
         description: error.message || "An error occurred during sign up",
