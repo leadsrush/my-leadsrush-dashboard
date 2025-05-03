@@ -67,13 +67,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (profileData && !error) {
             console.log("Profile data loaded:", profileData);
             
+            // Map database column names to our interface
+            const mappedProfile: UserProfile = {
+              id: profileData.id,
+              name: profileData.name,
+              email: profileData.email,
+              role: profileData.role,
+              avatar: profileData.avatar,
+              active: profileData.active || false
+            };
+            
             const extendedUser = {
               ...session.user,
-              profile: profileData
+              profile: mappedProfile
             } as ExtendedUser;
             
             setUser(extendedUser);
-            setUserProfile(profileData);
+            setUserProfile(mappedProfile);
             setIsAuthenticated(true);
           } else {
             console.error('Profile data not found:', error);
@@ -114,13 +124,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (profileData && !error) {
             console.log("Profile data loaded from existing session:", profileData);
             
+            // Map database column names to our interface
+            const mappedProfile: UserProfile = {
+              id: profileData.id,
+              name: profileData.name,
+              email: profileData.email,
+              role: profileData.role,
+              avatar: profileData.avatar,
+              active: profileData.active || false
+            };
+            
             const extendedUser = {
               ...session.user,
-              profile: profileData
+              profile: mappedProfile
             } as ExtendedUser;
             
             setUser(extendedUser);
-            setUserProfile(profileData);
+            setUserProfile(mappedProfile);
             setIsAuthenticated(true);
           } else {
             console.error('Profile data not found for existing session:', error);
